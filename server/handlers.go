@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -18,8 +18,8 @@ func addHandleFuncs(mux *http.ServeMux) {
 	mux.HandleFunc("/api/deletePost", authMiddleware(deletePostHandler))
 	mux.HandleFunc("/api/updatePostStatus", authMiddleware(updatePostStatusHandler))
 	mux.HandleFunc("/api/createUser", createUserHandler)
-	mux.HandleFunc("/api/logout", logoutHandler)
-	mux.HandleFunc("/api/loginUser", userLoginHandler)
+	mux.HandleFunc("/api/signout", signoutHandler)
+	mux.HandleFunc("/api/signin", signinHandler)
 	mux.HandleFunc("/api/fetchPage", fetchPageHandler)
 }
 
@@ -47,7 +47,7 @@ func writePostsListResponse(userID int, w http.ResponseWriter) {
 }
 
 func getUserIdFromRequest(r *http.Request) int {
-	return r.Context().Value("userID").(int)
+	return r.Context().Value(userIDKey).(int)
 }
 
 // Gets all posts for a given user, regardless of whether they're read or liked
@@ -56,20 +56,8 @@ func getSavedPostsHandler(w http.ResponseWriter, r *http.Request) {
 	writePostsListResponse(userID, w)
 }
 
-// // Gets all read posts, liked or not.
-// func getReadPostsHandler(w http.ResponseWriter, r *http.Request) {
-// 	userID := r.Context().Value("userID").(int)
-// 	writePostsListResponse(userID, w)
-// }
-
-// // Gets
-// func getLikedPostsHandler(w http.ResponseWriter, r *http.Request) {
-// 	userID := r.Context().Value("userID").(int)
-// 	writePostsListResponse(userID, w)
-// }
-
 func getPostHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := getUserIdFromRequest(r)
 	queryParams := r.URL.Query()
 	postIDStr := queryParams.Get("id")
 	if postIDStr == "" {
@@ -94,7 +82,7 @@ func getPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createPostHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := getUserIdFromRequest(r)
 
 	var post Post
 
@@ -118,7 +106,7 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deletePostHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := getUserIdFromRequest(r)
 	queryParams := r.URL.Query()
 	postIDStr := queryParams.Get("id")
 	if postIDStr == "" {
@@ -174,7 +162,7 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	authorizeAndWriteToken(w, user)
 }
 
-func userLoginHandler(w http.ResponseWriter, r *http.Request) {
+func signinHandler(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 
@@ -188,7 +176,7 @@ func userLoginHandler(w http.ResponseWriter, r *http.Request) {
 	authorizeAndWriteToken(w, user)
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
+func signoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    "",
@@ -261,7 +249,7 @@ func fetchPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer resp.Body.Close()
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to read response body: %v", err), http.StatusInternalServerError)
 		return

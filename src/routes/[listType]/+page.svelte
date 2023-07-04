@@ -5,6 +5,8 @@
 	import { markAsRead, like } from '$lib/postActions';
 	import type { Post } from './+page';
 
+	import DOMPurify from 'dompurify';
+
 	import { Readability, isProbablyReaderable } from '@mozilla/readability';
 
 	export let data: PageData;
@@ -52,9 +54,10 @@
 				}
 
 				body = contentDoc.body.innerHTML;
+				body = DOMPurify.sanitize(body);
 
-				console.log('title is: ', title);
-				console.log('body is: ', body);
+				// console.log('title is: ', title);
+				// console.log('body is: ', body);
 				await sendPost();
 			}
 		}
@@ -135,7 +138,10 @@
 			<div>
 				{#if !$page.url.pathname.startsWith('/saved')}
 					<span
+						role="button"
+						tabindex="0"
 						on:click={() => likePostAndUpdate(post)}
+						on:keydown={(e) => e.key === 'Enter' && likePostAndUpdate(post)}
 						class="text-black px-2 py-1 text-xl cursor-pointer hover:text-gray-500"
 						>{post.isLiked ? '★' : '☆'}</span
 					>
@@ -147,3 +153,7 @@
 		{/if}
 	{/each}
 </div>
+
+{#if data.posts.length == 0}
+	<div class="mt-4 italic">Nothing {$page.url.pathname.substring(1)} yet...</div>
+{/if}

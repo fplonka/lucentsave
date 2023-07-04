@@ -68,6 +68,12 @@ func authorizeAndWriteToken(w http.ResponseWriter, user User) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+type key int
+
+const (
+	userIDKey key = iota
+)
+
 func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie("token")
@@ -106,7 +112,7 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		generateAndSetAuthToken(w, claims.UserID, claims.Username)
 
 		// We add the user ID to the context
-		ctx := context.WithValue(r.Context(), "userID", claims.UserID)
+		ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)
 		// Call the next handler function with the updated context
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

@@ -16,9 +16,12 @@
 		"@sveltejs/adapter-node": "^1.2.4",
 		"@sveltejs/adapter-static": "^2.0.2",
 		"@sveltejs/kit": "^1.20.4",
+		"@types/dompurify": "^3.0.2",
+		"@types/node": "^20.3.3",
 		"@typescript-eslint/eslint-plugin": "^5.45.0",
 		"@typescript-eslint/parser": "^5.45.0",
 		"autoprefixer": "^10.4.14",
+		"dompurify": "^3.0.4",
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-svelte": "^2.30.0",
@@ -35,6 +38,7 @@
 	"type": "module",
 	"dependencies": {
 		"@mozilla/readability": "^0.4.4",
-		"@tailwindcss/typography": "^0.5.9"
+		"@tailwindcss/typography": "^0.5.9",
+		"jsdom": "^22.1.0"
 	}
 }

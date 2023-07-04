@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { isLoggedIn } from '../stores';
+	import { isSignedIn } from '../stores';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 
@@ -16,18 +16,17 @@
 		dropdownOpen = false;
 	};
 
-	const logout = async () => {
-		const response = await fetch('http://localhost:8080/api/logout', {
+	const signout = async () => {
+		const response = await fetch('http://localhost:8080/api/signout', {
 			method: 'POST',
 			credentials: 'include'
 		});
 
 		if (response.ok) {
-			isLoggedIn.set(false); // If the logout was successful, update the isLoggedIn store
+			isSignedIn.set(false);
 			dropdownOpen = false;
-			goto('/login');
+			goto('/signin');
 		} else {
-			console.error('failed to log out');
 			// TODO
 		}
 	};
@@ -37,12 +36,12 @@
 			const cookieExists = document.cookie
 				.split(';')
 				.some((item) => item.trim().startsWith('loggedIn='));
-			isLoggedIn.set(cookieExists);
+			isSignedIn.set(cookieExists);
 		}
 	});
 </script>
 
-{#if $isLoggedIn}
+{#if $isSignedIn}
 	<nav class="p-2 md:p-3 border-b-2 border-black">
 		<div class="container max-w-3xl mx-auto flex justify-between items-center">
 			<div>
@@ -72,15 +71,21 @@
 							: ''}">Liked</a
 					>
 				</div>
-				<div class="relative" on:mouseenter={openDropdown} on:mouseleave={closeDropdown}>
+				<div
+					role="menu"
+					tabindex="0"
+					class="relative"
+					on:mouseenter={openDropdown}
+					on:mouseleave={closeDropdown}
+				>
 					<button class="relative z-10 mx-1 cursor-pointer">☰</button>
 					{#if dropdownOpen}
 						<div class="absolute right-0 w-36 bg-white z-20 border-2 border-black">
 							<ul class="text-black shadow-box">
-								<li class="cursor-pointer py-2 px-4 hover:text-gray-500">Search</li>
-								<li class="cursor-pointer py-2 px-4 hover:text-gray-500" on:click={logout}>
-									Log out
-								</li>
+								<button class="cursor-pointer py-2 px-4 hover:text-gray-500">Search</button>
+								<button class="cursor-pointer py-2 px-4 hover:text-gray-500" on:click={signout}>
+									Sign out
+								</button>
 							</ul>
 						</div>
 					{/if}
@@ -95,15 +100,3 @@
 		<slot />
 	</div>
 </div>
-
-<style>
-	details summary::-webkit-details-marker {
-		display: none;
-	}
-	details summary:after {
-		content: '☰';
-	}
-	html {
-		overflow-y: scroll;
-	}
-</style>

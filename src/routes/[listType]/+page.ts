@@ -1,7 +1,7 @@
 // src/routes/posts/+page.ts
 import { redirect } from '@sveltejs/kit'
 import type { PageLoad } from './$types'
-import { isLoggedIn } from '../../stores'
+import { isSignedIn } from '../../stores'
 import { filterPosts } from './util'
 
 export interface Post {
@@ -19,19 +19,22 @@ export const load: PageLoad = async ({ params, fetch }) => {
 	})
 
 	if (response.status === 401) {
-		isLoggedIn.set(false)
-		console.log("couldn't fetch posts, setting isLoggedIn=false")
-		throw redirect(307, '/login')
+		isSignedIn.set(false)
+		throw redirect(307, '/signin')
 	}
 
-	isLoggedIn.set(true)
+	if (response.ok) {
+		isSignedIn.set(true)
 
-	const allPosts: Post[] = await response.json()
+		const allPosts: Post[] = await response.json()
 
-	const listType = params.listType // The route parameter (saved, liked, or read)
-	if (!['saved', 'liked', 'read'].includes(listType)) {
-		throw redirect(307, '/')
+		const listType = params.listType // The route parameter (saved, liked, or read)
+		if (!['saved', 'liked', 'read'].includes(listType)) {
+			throw redirect(307, '/')
+		}
+
+		return { posts: filterPosts(allPosts, listType) }
 	}
-
-	return { posts: filterPosts(allPosts, listType) }
+	var empty: Post[] = []
+	return { posts: empty }
 }
