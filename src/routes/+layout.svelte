@@ -5,6 +5,7 @@
 	import { isSignedIn } from '../stores';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import Fuse from 'fuse.js';
 
 	let dropdownOpen = false;
 
