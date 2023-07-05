@@ -1,9 +1,14 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { isSignedIn } from '../../stores';
 
 	let email = '';
 	let password = '';
+
+	// if (browser && isSignedIn) {
+	// 	goto('/saved');
+	// }
 
 	const signin = async () => {
 		const response = await fetch('http://localhost:8080/api/signin', {
@@ -17,6 +22,7 @@
 
 		if (response.ok) {
 			isSignedIn.set(true);
+			console.log('AAAAAAAAAAAAAAAAAaaaaaa');
 			goto('/saved');
 		} else {
 			alert('Sign in failed!');

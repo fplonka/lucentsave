@@ -15,6 +15,7 @@ func main() {
 
 	var err error
 	db, err = sql.Open("postgres", "user=postgres dbname=mydatabase sslmode=disable")
+	prepareStatements()
 
 	if err != nil {
 		log.Fatal(err)

@@ -23,9 +23,9 @@
 		});
 
 		if (response.ok) {
-			isSignedIn.set(false);
 			dropdownOpen = false;
-			goto('/signin');
+			await goto('/signin');
+			isSignedIn.set(false);
 		} else {
 			// TODO
 		}
@@ -42,7 +42,7 @@
 </script>
 
 {#if $isSignedIn}
-	<nav class="p-2 md:p-3 border-b-2 border-black">
+	<nav class="p-2 md:p-3 border-b-2 border-black" on:mouseleave={closeDropdown}>
 		<div class="container max-w-3xl mx-auto flex justify-between items-center">
 			<div>
 				<a href="/" class="font-extrabold text-l md:text-xl hover:text-gray-500">lucentsave</a>
@@ -71,18 +71,18 @@
 							: ''}">Liked</a
 					>
 				</div>
-				<div
-					role="menu"
-					tabindex="0"
-					class="relative"
-					on:mouseenter={openDropdown}
-					on:mouseleave={closeDropdown}
-				>
+				<div role="menu" tabindex="0" class="relative" on:mouseenter={openDropdown}>
 					<button class="relative z-10 mx-1 cursor-pointer">☰</button>
 					{#if dropdownOpen}
 						<div class="absolute right-0 w-36 bg-white z-20 border-2 border-black">
 							<ul class="text-black shadow-box">
-								<button class="cursor-pointer py-2 px-4 hover:text-gray-500">Search</button>
+								<a
+									href="/search"
+									class="block cursor-pointer py-2 px-4 hover:text-gray-500 {$page.url.pathname ==
+									'/search'
+										? 'font-bold'
+										: ''}">Search</a
+								>
 								<button class="cursor-pointer py-2 px-4 hover:text-gray-500" on:click={signout}>
 									Sign out
 								</button>

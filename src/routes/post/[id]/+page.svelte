@@ -6,7 +6,7 @@
 	export let data: PageData;
 
 	let deleteState = 'Delete';
-	let deleteTimeout: number;
+	let deleteTimeout: NodeJS.Timeout;
 
 	const initiateDelete = (postID: number) => {
 		if (deleteState === 'Delete') {

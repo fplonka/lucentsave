@@ -1,6 +1,5 @@
-// src/routes/posts/+page.ts
 import { redirect } from '@sveltejs/kit'
-import type { PageLoad } from './$types'
+import type { PageServerLoad } from './$types'
 import { isSignedIn } from '../../stores'
 import { filterPosts } from './util'
 
@@ -13,7 +12,7 @@ export interface Post {
 	isLiked: boolean
 }
 
-export const load: PageLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch }) => {
 	const response = await fetch('http://localhost:8080/api/getAllUserPosts', {
 		credentials: 'include'
 	})

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -80,7 +79,6 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		if err != nil {
 			if err == http.ErrNoCookie {
 				// If the cookie is not set, return an unauthorized status
-				fmt.Println("no cookie set!!")
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}

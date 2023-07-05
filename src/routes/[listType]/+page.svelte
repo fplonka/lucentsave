@@ -3,7 +3,7 @@
 	import type { PageData } from './$types';
 	import { filterPosts } from './util';
 	import { markAsRead, like } from '$lib/postActions';
-	import type { Post } from './+page';
+	import type { Post } from './+page.server';
 
 	import DOMPurify from 'dompurify';
 
@@ -48,6 +48,8 @@
 
 					// Check if the image source has the localhost origin
 					if (urlObject.origin === 'http://localhost:5173') {
+						// TODO: adjust when deployed
+
 						// Replace the origin in the image source with the origin of the post URL
 						img.src = postUrlObject.origin + urlObject.pathname + urlObject.search + urlObject.hash;
 					}
@@ -59,6 +61,8 @@
 				// console.log('title is: ', title);
 				// console.log('body is: ', body);
 				await sendPost();
+
+				url = '';
 			}
 		}
 	}
@@ -110,6 +114,7 @@
 {#if $page.url.pathname.startsWith('/saved')}
 	<form on:submit={fetchAndParseURL} class="mt-5 flex items-center space-x-2">
 		<input
+			tabindex="1"
 			type="text"
 			id="url"
 			bind:value={url}
@@ -139,7 +144,7 @@
 				{#if !$page.url.pathname.startsWith('/saved')}
 					<span
 						role="button"
-						tabindex="0"
+						tabindex="2"
 						on:click={() => likePostAndUpdate(post)}
 						on:keydown={(e) => e.key === 'Enter' && likePostAndUpdate(post)}
 						class="text-black px-2 py-1 text-xl cursor-pointer hover:text-gray-500"

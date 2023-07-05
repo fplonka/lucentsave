@@ -40,7 +40,6 @@ func writePostsListResponse(userID int, w http.ResponseWriter) {
 		writeErrorResponse(err, w)
 		return
 	}
-	// fmt.Println("posts list is", posts)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(posts)
@@ -82,6 +81,7 @@ func getPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createPostHandler(w http.ResponseWriter, r *http.Request) {
+
 	userID := getUserIdFromRequest(r)
 
 	var post Post
@@ -92,8 +92,6 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 		writeErrorResponse(err, w)
 		return
 	}
-
-	fmt.Println("adding post", post)
 
 	err = addPost(post, userID)
 	if err != nil {
@@ -134,16 +132,12 @@ func deletePostHandler(w http.ResponseWriter, r *http.Request) {
 func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
 
-	fmt.Println("cookies are: ", r.Cookies())
-
 	// Decode the incoming User json
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	fmt.Println("adding user:", user)
 
 	// Hash the password using bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.HashedPassword), bcrypt.MinCost)

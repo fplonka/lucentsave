@@ -3,7 +3,11 @@ TODO:
 - animations when changing post status from posts list
 - icons
 
+loading when saving a post
+
+- clear input after save?
+
+refactoring: shared between posts list and search/, signin/ and register/
+
 errors: used email, wrong password/email
 search in post bodies/titles!!
-
-a11y errors
