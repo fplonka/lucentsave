@@ -34,6 +34,7 @@ var (
 	addPostStmt              *sql.Stmt
 	deletePostStmt           *sql.Stmt
 	updatePostStatusStmt     *sql.Stmt
+	getUserByUsername, _     *sql.Stmt
 )
 
 func prepareStatements() {
@@ -43,6 +44,7 @@ func prepareStatements() {
 	addPostStmt, _ = db.Prepare("INSERT INTO posts (user_id, title, body, url, added_at) VALUES ($1, $2, $3, $4, $5)")
 	deletePostStmt, _ = db.Prepare("DELETE FROM posts WHERE ID = $1")
 	updatePostStatusStmt, _ = db.Prepare("UPDATE posts SET read = $1, liked = $2 WHERE id = $3 AND user_id = $4")
+	getUserByUsername, _ = db.Prepare("SELECT username FROM users WHERE username = $1")
 }
 
 var db *sql.DB
@@ -145,5 +147,11 @@ func updatePostStatus(userID, postID int, read, liked bool) error {
 	return nil
 }
 
-// TODO: prepare statements which will be used
+func checkUsernameExists(username string) bool {
+	var existingUser User
+	err := getUserByUsername.QueryRow(username).Scan(&existingUser.Username)
+	// Slightly misleading: returns true if username is not taken but some other error occurs. Should be rare
+	return err != sql.ErrNoRows
+}
+
 // TODO: research indexes, transactions

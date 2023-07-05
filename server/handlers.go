@@ -129,6 +129,7 @@ func deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	writePostsListResponse(userID, w)
 }
 
+// TODO: handle duplicate email
 func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
 
@@ -139,17 +140,24 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the user already exists
+	usernameTaken := checkUsernameExists(user.Username)
+	if usernameTaken {
+		http.Error(w, "Email already taken", http.StatusBadRequest)
+		return
+	}
+
 	// Hash the password using bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.HashedPassword), bcrypt.MinCost)
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		http.Error(w, "Registration failed", http.StatusInternalServerError)
 		return
 	}
 
 	// Insert the user into the database.
 	_, err = db.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", user.Username, hashedPassword)
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		http.Error(w, "Registration failed", http.StatusInternalServerError)
 		return
 	}
 
@@ -164,6 +172,11 @@ func signinHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if !checkUsernameExists(user.Username) {
+		http.Error(w, "Account not found", http.StatusBadRequest)
 		return
 	}
 

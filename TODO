@@ -5,9 +5,5 @@ TODO:
 
 loading when saving a post
 
-- clear input after save?
-
 refactoring: shared between posts list and search/, signin/ and register/
-
-errors: used email, wrong password/email
-search in post bodies/titles!!
+set up logging

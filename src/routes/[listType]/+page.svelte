@@ -47,7 +47,10 @@
 					let postUrlObject = new URL(url);
 
 					// Check if the image source has the localhost origin
-					if (urlObject.origin === 'http://localhost:5173') {
+					if (
+						urlObject.origin === 'http://localhost:5173' ||
+						urlObject.origin === 'http://localhost:3000'
+					) {
 						// TODO: adjust when deployed
 
 						// Replace the origin in the image source with the origin of the post URL

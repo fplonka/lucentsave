@@ -27,7 +27,7 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int, username string)
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
-		http.Error(w, "Failed to authorize user", http.StatusInternalServerError)
+		http.Error(w, "Failed to authenticate", http.StatusInternalServerError)
 		return
 	}
 
@@ -57,7 +57,7 @@ func authorizeAndWriteToken(w http.ResponseWriter, user User) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(user.HashedPassword)); err != nil {
-		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		http.Error(w, "Incorrect password", http.StatusUnauthorized)
 		return
 	}
 

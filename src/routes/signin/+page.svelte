@@ -5,10 +5,7 @@
 
 	let email = '';
 	let password = '';
-
-	// if (browser && isSignedIn) {
-	// 	goto('/saved');
-	// }
+	let errorMessage = '';
 
 	const signin = async () => {
 		const response = await fetch('http://localhost:8080/api/signin', {
@@ -22,10 +19,9 @@
 
 		if (response.ok) {
 			isSignedIn.set(true);
-			console.log('AAAAAAAAAAAAAAAAAaaaaaa');
 			goto('/saved');
 		} else {
-			alert('Sign in failed!');
+			errorMessage = await response.text();
 		}
 	};
 </script>
@@ -70,11 +66,14 @@
 			class="w-full py-1 px-2 border-2 border-black"
 		/>
 
-		<input
-			type="submit"
-			value="Sign in"
-			class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
-		/>
+		<div class="flex items-center">
+			<input
+				type="submit"
+				value="Sign in"
+				class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
+			/>
+			<span class="text-black ml-2">{errorMessage}</span>
+		</div>
 	</form>
 
 	<p class="mt-4">

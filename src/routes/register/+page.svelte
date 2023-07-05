@@ -1,30 +1,40 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { isSignedIn } from '../../stores';
 
 	let email = ''; // Must be a valid email.
 	let password = '';
 	let confirmedPassword = '';
+	let errorMessage = '';
+	let formSubmitted = false;
 
-	// TODO: validation
-	// $: emailIsValid = /\S+@\S+\.\S+/.test(username);
+	$: {
+		errorMessage = '';
+		if (email && !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+			errorMessage = 'Invalid email';
+		} else if (password !== confirmedPassword) {
+			errorMessage = 'Passwords do not match';
+		}
+	}
 
 	const register = async () => {
-		const response = await fetch('http://localhost:8080/api/createUser', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ username: email, password }),
-			credentials: 'include'
-		});
+		formSubmitted = true;
+		if (!errorMessage) {
+			const response = await fetch('http://localhost:8080/api/createUser', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ username: email, password }),
+				credentials: 'include'
+			});
 
-		if (response.ok) {
-			isSignedIn.set(true);
-			goto('/saved');
-		} else {
-			alert('Registration failed!');
+			if (response.ok) {
+				isSignedIn.set(true);
+				goto('/saved');
+			} else {
+				errorMessage = await response.text();
+			}
 		}
 	};
 </script>
@@ -52,9 +62,6 @@
 
 <div>
 	<form class="border-b-2 border-black border-dashed" on:submit|preventDefault={register}>
-		<!-- <h2 class="text-2xl mb-2 font-bold text-black">Register</h2> -->
-
-		<!-- <label for="email" class="text-black">Email:</label> -->
 		<input
 			id="email"
 			bind:value={email}
@@ -63,7 +70,6 @@
 			class="w-full py-1 mb-2 px-2 border-2 border-black"
 		/>
 
-		<!-- <label for="password" class="text-black">Password:</label> -->
 		<input
 			id="password"
 			bind:value={password}
@@ -83,11 +89,16 @@
 			class="w-full py-1 px-2 border-2 border-black"
 		/>
 
-		<input
-			type="submit"
-			value="Register"
-			class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
-		/>
+		<div class="flex items-center">
+			<input
+				type="submit"
+				value="Register"
+				class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
+			/>
+			{#if formSubmitted}
+				<span class="text-black ml-2">{errorMessage}</span>
+			{/if}
+		</div>
 	</form>
 
 	<p class="mt-4">

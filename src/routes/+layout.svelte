@@ -5,7 +5,6 @@
 	import { isSignedIn } from '../stores';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import Fuse from 'fuse.js';
 
 	let dropdownOpen = false;
 
@@ -43,7 +42,11 @@
 </script>
 
 {#if $isSignedIn}
-	<nav class="p-2 md:p-3 border-b-2 border-black" on:mouseleave={closeDropdown}>
+	<nav
+		class="p-2 md:p-3 border-b-2 border-black"
+		on:mouseleave={closeDropdown}
+		on:click={closeDropdown}
+	>
 		<div class="container max-w-3xl mx-auto flex justify-between items-center">
 			<div>
 				<a href="/" class="font-extrabold text-l md:text-xl hover:text-gray-500">lucentsave</a>

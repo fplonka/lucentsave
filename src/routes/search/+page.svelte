@@ -2,26 +2,18 @@
 	import { page } from '$app/stores';
 	import type { PageData } from './$types';
 	import type { Post } from '../[listType]/+page.server';
-	import Fuse from 'fuse.js';
 
 	export let data: PageData;
 
-	let searchQuery: string = '';
-	$: searchResultPosts = data.posts.filter(
-		(p: Post) =>
-			p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			p.body.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			p.url.toLowerCase().includes(searchQuery.toLowerCase())
-	);
-	const options = {
-		includeScore: true,
-		keys: ['url', 'title', 'body']
-	};
-
-	const fuse = new Fuse(data.posts, options);
-
-	$: fuseResult = fuse.search(searchQuery).map((result) => result.item);
-	// const result = fuse.search('tion');
+	let query: string = '';
+	$: queryLower = query.toLowerCase();
+	$: searchResultPosts = data.posts
+		.filter((p: Post) => [p.title, p.body, p.url].join(' ').toLowerCase().includes(queryLower))
+		.sort(
+			(a: Post, b: Post) =>
+				[b.title, b.body, b.url].join(' ').toLowerCase().split(queryLower).length -
+				[a.title, a.body, a.url].join(' ').toLowerCase().split(queryLower).length
+		);
 
 	const getHostname = (url: string) => {
 		try {
@@ -37,7 +29,7 @@
 		tabindex="1"
 		type="text"
 		id="query"
-		bind:value={searchQuery}
+		bind:value={query}
 		required
 		class="w-full py-1 px-2 border-2 border-black"
 		placeholder="Enter search term here..."
@@ -45,14 +37,14 @@
 </div>
 
 <div class="mt-4">
-	{#each fuseResult as post (post.id)}
+	{#each searchResultPosts as post (post.id)}
 		<div class="flex justify-between items-center">
 			<a href={`/post/${post.id}`} class="hover:text-gray-500">
 				<div class="text-2xl font-bold block">{post.title}</div>
 				<div class="text-sm block">{getHostname(post.url)}</div>
 			</a>
 		</div>
-		{#if post.id !== fuseResult[fuseResult.length - 1].id}
+		{#if post.id !== searchResultPosts[searchResultPosts.length - 1].id}
 			<hr class="border-black border-t-2 border-dashed my-4" />
 		{/if}
 	{/each}
