@@ -6,5 +6,7 @@ TODO:
 loading when saving a post
 figure out centos go install, try 1.20 profile optimized compilation
 
+one shade of gray!
+
 refactoring: shared between posts list and search/, signin/ and register/
 set up logging
