@@ -50,7 +50,7 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int, username string)
 func authorizeAndWriteToken(w http.ResponseWriter, user User) {
 	var userID int
 	var hashedPassword []byte
-	err := db.QueryRow("SELECT id, password FROM users WHERE username = $1", user.Username).Scan(&userID, &hashedPassword)
+	err := getUserHashedPassword.QueryRow(user.Username).Scan(&userID, &hashedPassword)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusUnauthorized)
 		return

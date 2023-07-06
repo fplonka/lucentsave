@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
 	import { isSignedIn } from '../../stores';
 
 	let email = ''; // Must be a valid email.
@@ -20,7 +21,7 @@
 	const register = async () => {
 		formSubmitted = true;
 		if (!errorMessage) {
-			const response = await fetch('http://localhost:8080/api/createUser', {
+			const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/createUser', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

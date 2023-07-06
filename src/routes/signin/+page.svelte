@@ -2,13 +2,14 @@
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { isSignedIn } from '../../stores';
+	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
 
 	let email = '';
 	let password = '';
 	let errorMessage = '';
 
 	const signin = async () => {
-		const response = await fetch('http://localhost:8080/api/signin', {
+		const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/signin', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'

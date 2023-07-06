@@ -4,6 +4,7 @@
 	import { filterPosts } from './util';
 	import { markAsRead, like } from '$lib/postActions';
 	import type { Post } from './+page.server';
+	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
 
 	import DOMPurify from 'dompurify';
 
@@ -21,7 +22,7 @@
 		event.preventDefault();
 
 		const response = await fetch(
-			`http://localhost:8080/api/fetchPage?url=${encodeURIComponent(url)}`,
+			PUBLIC_BACKEND_API_URL + `/api/fetchPage?url=${encodeURIComponent(url)}`,
 			{
 				credentials: 'include'
 			}
@@ -72,7 +73,7 @@
 
 	const sendPost = async (): Promise<void> => {
 		data.posts = await (
-			await fetch('http://localhost:8080/api/createPost', {
+			await fetch(PUBLIC_BACKEND_API_URL + '/api/createPost', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

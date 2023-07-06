@@ -2,9 +2,10 @@ import { redirect } from '@sveltejs/kit'
 import type { PageServerLoad } from '../$types'
 import { isSignedIn } from '../../stores'
 import type { Post } from '../[listType]/+page.server'
+import { PUBLIC_BACKEND_API_URL } from '$env/static/public'
 
 export const load: PageServerLoad = async ({ fetch }) => {
-	const response = await fetch('http://localhost:8080/api/getAllUserPosts', {
+	const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/getAllUserPosts', {
 		credentials: 'include'
 	})
 

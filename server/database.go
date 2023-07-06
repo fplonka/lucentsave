@@ -34,17 +34,51 @@ var (
 	addPostStmt              *sql.Stmt
 	deletePostStmt           *sql.Stmt
 	updatePostStatusStmt     *sql.Stmt
-	getUserByUsername, _     *sql.Stmt
+	getUserByUsername        *sql.Stmt
+	getUserHashedPassword    *sql.Stmt
+	addUser                  *sql.Stmt
 )
 
-func prepareStatements() {
-	checkUserIsPostOwnerStmt, _ = db.Prepare("SELECT user_id FROM posts WHERE id = $1")
-	getUserPostsStmt, _ = db.Prepare("SELECT id, title, body, read, liked, url, added_at FROM posts WHERE user_id = $1 ORDER BY added_at DESC")
-	getPostStmt, _ = db.Prepare("SELECT id, title, body, read, liked, url FROM posts WHERE id = $1 AND user_id = $2")
-	addPostStmt, _ = db.Prepare("INSERT INTO posts (user_id, title, body, url, added_at) VALUES ($1, $2, $3, $4, $5)")
-	deletePostStmt, _ = db.Prepare("DELETE FROM posts WHERE ID = $1")
-	updatePostStatusStmt, _ = db.Prepare("UPDATE posts SET read = $1, liked = $2 WHERE id = $3 AND user_id = $4")
-	getUserByUsername, _ = db.Prepare("SELECT username FROM users WHERE username = $1")
+func prepareStatements() error {
+	// TODO: refactor error-checking
+	var err error
+	checkUserIsPostOwnerStmt, err = db.Prepare("SELECT user_id FROM posts WHERE id = $1")
+	if err != nil {
+		return err
+	}
+	getUserPostsStmt, err = db.Prepare("SELECT id, title, body, read, liked, url, added_at FROM posts WHERE user_id = $1 ORDER BY added_at DESC")
+	if err != nil {
+		return err
+	}
+	getPostStmt, err = db.Prepare("SELECT id, title, body, read, liked, url FROM posts WHERE id = $1 AND user_id = $2")
+	if err != nil {
+		return err
+	}
+	addPostStmt, err = db.Prepare("INSERT INTO posts (user_id, title, body, url, added_at) VALUES ($1, $2, $3, $4, $5)")
+	if err != nil {
+		return err
+	}
+	deletePostStmt, err = db.Prepare("DELETE FROM posts WHERE ID = $1")
+	if err != nil {
+		return err
+	}
+	updatePostStatusStmt, err = db.Prepare("UPDATE posts SET read = $1, liked = $2 WHERE id = $3 AND user_id = $4")
+	if err != nil {
+		return err
+	}
+	getUserByUsername, err = db.Prepare("SELECT email FROM users WHERE email = $1")
+	if err != nil {
+		return err
+	}
+	getUserHashedPassword, err = db.Prepare("SELECT id, hashed_password FROM users WHERE email = $1")
+	if err != nil {
+		return err
+	}
+	addUser, err = db.Prepare("INSERT INTO users (email, hashed_password) VALUES ($1, $2)")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 var db *sql.DB

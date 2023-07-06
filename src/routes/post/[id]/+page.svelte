@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import { markAsRead, like } from '$lib/postActions';
 	import { goto } from '$app/navigation';
+	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
 
 	export let data: PageData;
 
@@ -26,7 +27,7 @@
 	};
 
 	const deletePost = async (postID: number): Promise<void> => {
-		const response = await await fetch(`http://localhost:8080/api/deletePost?id=${postID}`, {
+		const response = await await fetch(PUBLIC_BACKEND_API_URL + `/api/deletePost?id=${postID}`, {
 			method: 'DELETE',
 			credentials: 'include'
 		});

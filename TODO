@@ -4,6 +4,7 @@ TODO:
 - icons
 
 loading when saving a post
+figure out centos go install, try 1.20 profile optimized compilation
 
 refactoring: shared between posts list and search/, signin/ and register/
 set up logging

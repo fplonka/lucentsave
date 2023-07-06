@@ -5,6 +5,7 @@
 	import { isSignedIn } from '../stores';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
 
 	let dropdownOpen = false;
 
@@ -17,7 +18,7 @@
 	};
 
 	const signout = async () => {
-		const response = await fetch('http://localhost:8080/api/signout', {
+		const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/signout', {
 			method: 'POST',
 			credentials: 'include'
 		});

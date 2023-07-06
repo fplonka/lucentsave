@@ -1,13 +1,12 @@
-// $lib/postActions.ts
-
 import type { Post } from '../routes/[listType]/+page.server'
+import { PUBLIC_BACKEND_API_URL } from '$env/static/public'
 
 export async function updatePostStatus (
 	postId: number,
 	read: boolean,
 	liked: boolean
 ): Promise<Post> {
-	const response = await fetch('http://localhost:8080/api/updatePostStatus', {
+	const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/updatePostStatus', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
