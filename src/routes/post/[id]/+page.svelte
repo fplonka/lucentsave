@@ -60,7 +60,7 @@
 			</button>
 		</div>
 		<div
-			class="text-black mt-2 pb-4 prose prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500 relative"
+			class="text-black mt-2 pb-4 prose-code:bg-red-500 prose prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500 relative"
 		>
 			{@html data.post.body}
 		</div>
