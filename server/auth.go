@@ -12,16 +12,14 @@ import (
 )
 
 type Claims struct {
-	Username string `json:"username"`
-	UserID   int    `json:"userID"`
+	UserID int `json:"userID"`
 	jwt.StandardClaims
 }
 
-func generateAndSetAuthToken(w http.ResponseWriter, userID int, username string) {
+func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		UserID:         userID,
-		Username:       username,
 		StandardClaims: jwt.StandardClaims{ExpiresAt: expirationTime.Unix()},
 	})
 
@@ -50,18 +48,18 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int, username string)
 func authorizeAndWriteToken(w http.ResponseWriter, user User) {
 	var userID int
 	var hashedPassword []byte
-	err := getUserHashedPassword.QueryRow(user.Username).Scan(&userID, &hashedPassword)
+	err := getUserHashedPassword.QueryRow(user.Email).Scan(&userID, &hashedPassword)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusUnauthorized)
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(user.HashedPassword)); err != nil {
+	if err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(user.Password)); err != nil {
 		http.Error(w, "Incorrect password", http.StatusUnauthorized)
 		return
 	}
 
-	generateAndSetAuthToken(w, userID, user.Username)
+	generateAndSetAuthToken(w, userID)
 
 	// Respond to the client
 	w.WriteHeader(http.StatusCreated)
@@ -107,7 +105,7 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// JWT is valid so we refresh it
-		generateAndSetAuthToken(w, claims.UserID, claims.Username)
+		generateAndSetAuthToken(w, claims.UserID)
 
 		// We add the user ID to the context
 		ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)

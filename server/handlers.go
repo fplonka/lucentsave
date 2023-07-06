@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/mail"
 	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
@@ -81,7 +82,6 @@ func getPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createPostHandler(w http.ResponseWriter, r *http.Request) {
-
 	userID := getUserIdFromRequest(r)
 
 	var post Post
@@ -129,7 +129,6 @@ func deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	writePostsListResponse(userID, w)
 }
 
-// TODO: handle duplicate email
 func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
 
@@ -140,22 +139,29 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if email is valid
+	_, err = mail.ParseAddress(user.Email)
+	if err != nil {
+		http.Error(w, "Invalid email", http.StatusBadRequest)
+		return
+	}
+
 	// Check if the user already exists
-	usernameTaken := checkUsernameExists(user.Username)
-	if usernameTaken {
+	emailTaken := checkEmailIsUsed(user.Email)
+	if emailTaken {
 		http.Error(w, "Email already taken", http.StatusBadRequest)
 		return
 	}
 
 	// Hash the password using bcrypt
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.HashedPassword), bcrypt.MinCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.MinCost)
 	if err != nil {
 		http.Error(w, "Registration failed", http.StatusInternalServerError)
 		return
 	}
 
 	// Insert the user into the database.
-	_, err = addUser.Exec(user.Username, hashedPassword)
+	_, err = addUser.Exec(user.Email, hashedPassword)
 	if err != nil {
 		http.Error(w, "Registration failed", http.StatusInternalServerError)
 		return
@@ -175,7 +181,7 @@ func signinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !checkUsernameExists(user.Username) {
+	if !checkEmailIsUsed(user.Email) {
 		http.Error(w, "Account not found", http.StatusBadRequest)
 		return
 	}

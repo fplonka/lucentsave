@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
-	import { isSignedIn } from '../../stores';
 	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
+	import { isSignedIn } from '../../stores';
 
 	let email = '';
 	let password = '';
@@ -14,7 +13,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ username: email, password }),
+			body: JSON.stringify({ email, password }),
 			credentials: 'include'
 		});
 
@@ -71,7 +70,7 @@
 			<input
 				type="submit"
 				value="Sign in"
-				class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
+				class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-500 cursor-pointer"
 			/>
 			<span class="text-black ml-2">{errorMessage}</span>
 		</div>

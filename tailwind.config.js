@@ -4,20 +4,18 @@ export default {
 	theme: {
 		extend: {
 			typography: {
-			  quoteless: {
-				css: {
-				  'blockquote p:first-of-type::before': { content: 'none' },
-				  'blockquote p:first-of-type::after': { content: 'none' },
-				},
-			  },
+				quoteless: {
+					css: {
+						'blockquote p:first-of-type::before': { content: 'none' },
+						'blockquote p:first-of-type::after': { content: 'none' }
+					}
+				}
 			},
 			fontFamily: {
-				'serif': ['Bookerly'],
-				'sans': ['Inter'],
+				serif: ['Bookerly'],
+				sans: ['Inter']
 			}
-		  },
+		}
 	},
-	plugins: [
-		require('@tailwindcss/typography'),
-	],
-};
+	plugins: [require('@tailwindcss/typography')]
+}

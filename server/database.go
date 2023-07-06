@@ -19,9 +19,9 @@ type Post struct {
 }
 
 type User struct {
-	ID             int    `json:"id"`
-	Username       string `json:"username"`
-	HashedPassword string `json:"password"` // TODO: rename this, confusing AF
+	ID       int    `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"` // TODO: rename this, confusing AF
 }
 
 var (
@@ -34,7 +34,7 @@ var (
 	addPostStmt              *sql.Stmt
 	deletePostStmt           *sql.Stmt
 	updatePostStatusStmt     *sql.Stmt
-	getUserByUsername        *sql.Stmt
+	getUserByEmail           *sql.Stmt
 	getUserHashedPassword    *sql.Stmt
 	addUser                  *sql.Stmt
 )
@@ -66,7 +66,7 @@ func prepareStatements() error {
 	if err != nil {
 		return err
 	}
-	getUserByUsername, err = db.Prepare("SELECT email FROM users WHERE email = $1")
+	getUserByEmail, err = db.Prepare("SELECT email FROM users WHERE email = $1")
 	if err != nil {
 		return err
 	}
@@ -181,10 +181,10 @@ func updatePostStatus(userID, postID int, read, liked bool) error {
 	return nil
 }
 
-func checkUsernameExists(username string) bool {
+func checkEmailIsUsed(email string) bool {
 	var existingUser User
-	err := getUserByUsername.QueryRow(username).Scan(&existingUser.Username)
-	// Slightly misleading: returns true if username is not taken but some other error occurs. Should be rare
+	err := getUserByEmail.QueryRow(email).Scan(&existingUser.Email)
+	// Slightly misleading: returns true if email is not taken but some other error occurs. Should be rare
 	return err != sql.ErrNoRows
 }
 

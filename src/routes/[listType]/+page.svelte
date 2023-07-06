@@ -97,12 +97,15 @@
 	};
 
 	const likePostAndUpdate = async (post: Post) => {
-		const udpatedPost = await like(post);
-		updatePost(udpatedPost);
-	};
+		const postCopy = { ...post };
 
-	const markPostReadAndUpdate = async (post: Post) => {
-		const udpatedPost = await markAsRead(post);
+		// Update post locally first for responsiveness
+		const postIndex = data.posts.findIndex((p) => p.id === post.id);
+		if (postIndex !== -1) {
+			data.posts[postIndex].isLiked = !post.isLiked;
+		}
+
+		const udpatedPost = await like(postCopy);
 		updatePost(udpatedPost);
 	};
 
@@ -129,8 +132,8 @@
 		<input
 			type="submit"
 			value="Save"
-			class="py-1 px-2 border-2 border-black cursor-pointer {isUrlValid
-				? 'bg-black text-white hover:bg-gray-700'
+			class="py-1 px-2 border-2 border-black {isUrlValid
+				? 'bg-black text-white hover:bg-gray-700 cursor-pointer'
 				: 'bg-gray-700 text-white cursor-not-allowed'}"
 			disabled={!isUrlValid}
 		/>
