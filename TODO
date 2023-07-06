@@ -4,11 +4,13 @@ TODO:
 - icons
 
 loading when saving a post
-fix image links again
-    - and do the same for all links actually
-
+fix image links again - and do the same for all links actually
 
 figure out centos go install, try 1.20 profile optimized compilation
+
+posts in store
+
+have post creation return only the created post? what if state gets desynced in some cursed way? refreshing i guess
 
 one shade of gray!
 

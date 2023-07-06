@@ -13,28 +13,28 @@ export interface Post {
 	isLiked: boolean
 }
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
-	const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/getAllUserPosts', {
-		credentials: 'include'
-	})
+// export const load: PageServerLoad = async ({ params, fetch }) => {
+// 	const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/getAllUserPosts', {
+// 		credentials: 'include'
+// 	})
 
-	if (response.status === 401) {
-		isSignedIn.set(false)
-		throw redirect(307, '/signin')
-	}
+// 	if (response.status === 401) {
+// 		isSignedIn.set(false)
+// 		throw redirect(307, '/signin')
+// 	}
 
-	if (response.ok) {
-		isSignedIn.set(true)
+// 	if (response.ok) {
+// 		isSignedIn.set(true)
 
-		const allPosts: Post[] = await response.json()
+// 		const allPosts: Post[] = await response.json()
 
-		const listType = params.listType // The route parameter (saved, liked, or read)
-		if (!['saved', 'liked', 'read'].includes(listType)) {
-			throw redirect(307, '/')
-		}
+// 		const listType = params.listType // The route parameter (saved, liked, or read)
+// 		if (!['saved', 'liked', 'read'].includes(listType)) {
+// 			throw redirect(307, '/')
+// 		}
 
-		return { posts: filterPosts(allPosts, listType) }
-	}
-	var empty: Post[] = []
-	return { posts: empty }
-}
+// 		return { posts: filterPosts(allPosts, listType) }
+// 	}
+// 	var empty: Post[] = []
+// 	return { posts: empty }
+// }

@@ -2,12 +2,13 @@
 	import { page } from '$app/stores';
 	import type { PageData } from './$types';
 	import type { Post } from '../[listType]/+page.server';
+	import { posts } from '../../stores';
 
-	export let data: PageData;
+	// export let data: PageData;
 
 	let query: string = '';
 	$: queryLower = query.toLowerCase();
-	$: searchResultPosts = data.posts
+	$: searchResultPosts = $posts
 		.filter((p: Post) => [p.title, p.body, p.url].join(' ').toLowerCase().includes(queryLower))
 		.sort(
 			(a: Post, b: Post) =>
@@ -49,7 +50,3 @@
 		{/if}
 	{/each}
 </div>
-
-{#if data.posts.length == 0}
-	<div class="mt-4 italic">Nothing {$page.url.pathname.substring(1)} yet...</div>
-{/if}

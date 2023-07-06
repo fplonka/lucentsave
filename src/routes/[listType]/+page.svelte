@@ -9,8 +9,12 @@
 	import DOMPurify from 'dompurify';
 
 	import { Readability, isProbablyReaderable } from '@mozilla/readability';
+	import { onMount } from 'svelte';
+	import { posts } from '../../stores';
 
-	export let data: PageData;
+	// export let data: PageData;
+
+	$: filteredPosts = filterPosts($posts, $page.url.pathname.substring(1));
 
 	let url: string = '';
 	let title: string = '';
@@ -72,37 +76,35 @@
 	}
 
 	const sendPost = async (): Promise<void> => {
-		data.posts = await (
-			await fetch(PUBLIC_BACKEND_API_URL + '/api/createPost', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ url, title, body }),
-				credentials: 'include'
-			})
-		).json();
-
-		data.posts = filterPosts(data.posts, $page.url.pathname.substring(1));
+		posts.set(
+			await (
+				await fetch(PUBLIC_BACKEND_API_URL + '/api/createPost', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ url, title, body }),
+					credentials: 'include'
+				})
+			).json()
+		);
 	};
 
 	const updatePost = async (post: Post) => {
-		const postIndex = data.posts.findIndex((p) => p.id === post.id);
+		const postIndex = $posts.findIndex((p) => p.id === post.id);
 
 		if (postIndex !== -1) {
-			data.posts[postIndex] = post;
+			$posts[postIndex] = post;
 		}
-
-		data.posts = filterPosts(data.posts, $page.url.pathname.substring(1));
 	};
 
 	const likePostAndUpdate = async (post: Post) => {
 		const postCopy = { ...post };
 
 		// Update post locally first for responsiveness
-		const postIndex = data.posts.findIndex((p) => p.id === post.id);
+		const postIndex = $posts.findIndex((p) => p.id === post.id);
 		if (postIndex !== -1) {
-			data.posts[postIndex].isLiked = !post.isLiked;
+			$posts[postIndex].isLiked = !post.isLiked;
 		}
 
 		const udpatedPost = await like(postCopy);
@@ -141,7 +143,7 @@
 {/if}
 
 <div class="mt-4">
-	{#each data.posts as post (post.id)}
+	{#each filteredPosts as post (post.id)}
 		<div class="flex justify-between items-center">
 			<a href={`/post/${post.id}`} class="hover:text-gray-500">
 				<div class="text-2xl font-bold block">{post.title}</div>
@@ -160,12 +162,12 @@
 				{/if}
 			</div>
 		</div>
-		{#if post.id !== data.posts[data.posts.length - 1].id}
+		{#if post.id !== filteredPosts[filteredPosts.length - 1].id}
 			<hr class="border-black border-t-2 border-dashed my-4" />
 		{/if}
 	{/each}
 </div>
 
-{#if data.posts.length == 0}
+{#if filteredPosts.length == 0}
 	<div class="mt-4 italic">Nothing {$page.url.pathname.substring(1)} yet...</div>
 {/if}

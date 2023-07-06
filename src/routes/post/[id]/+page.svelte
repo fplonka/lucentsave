@@ -3,8 +3,25 @@
 	import { markAsRead, like } from '$lib/postActions';
 	import { goto } from '$app/navigation';
 	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
+	import { posts } from '../../../stores';
+	import type { Post } from '../../[listType]/+page.server';
+	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
+	import { redirect } from '@sveltejs/kit';
 
 	export let data: PageData;
+
+	let postID: number = parseInt($page.params['id']);
+	let postIndex = $posts.findIndex((p) => p.id === postID);
+	if (postIndex == -1) {
+		console.log('redirecting!');
+		if (browser) {
+			goto('/saved');
+		} else {
+			//return redirect(307, 'saved');
+		}
+	}
+	let post: Post = $posts[postIndex];
 
 	let deleteState = 'Delete';
 	let deleteTimeout: NodeJS.Timeout;
@@ -32,6 +49,8 @@
 			credentials: 'include'
 		});
 		if (response.ok) {
+			const postIndex = $posts.findIndex((p) => p.id === post.id);
+			posts.update((currentPosts) => currentPosts.filter((_, i) => i !== postIndex));
 			goto('/saved');
 		}
 	};
@@ -41,9 +60,9 @@
 	<div class="border-b-2 border-dashed border-black">
 		<div on:mouseleave={reset} class="flex justify-between items-center group">
 			<div>
-				<h2 class="text-2xl font-bold text-black">{data.post.title}</h2>
-				<a href={data.post.url} class="text-sm text-black block hover:underline hover:text-gray-500"
-					>{data.post.url}</a
+				<h2 class="text-2xl font-bold text-black">{post.title}</h2>
+				<a href={post.url} class="text-sm text-black block hover:underline hover:text-gray-500"
+					>{post.url}</a
 				>
 			</div>
 			<!-- <div
@@ -54,7 +73,7 @@
 			</div> -->
 			<button
 				class="opacity-0 group-hover:opacity-100 px-2 py-1 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
-				on:click={() => initiateDelete(data.post.id)}
+				on:click={() => initiateDelete(post.id)}
 			>
 				{deleteState}
 			</button>
@@ -64,7 +83,7 @@
 			prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500
 			relative prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 prose-code:font-normal prose-code:p-0.5"
 		>
-			{@html data.post.body}
+			{@html post.body}
 		</div>
 	</div>
 </div>
@@ -75,23 +94,23 @@
 			class="py-1 px-2 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
 			on:click={async () => {
 				// Doing this to make things more responsive: we update the client-side state instantly
-				const postCopy = { ...data.post };
-				data.post.isRead = !data.post.isRead;
-				data.post = await markAsRead(postCopy);
+				const postCopy = { ...post };
+				post.isRead = !post.isRead;
+				post = await markAsRead(postCopy);
 			}}
 		>
-			{data.post.isRead ? 'Mark as unread' : 'Mark as read'}
+			{post.isRead ? 'Mark as unread' : 'Mark as read'}
 		</button>
 		<span
 			on:click={async () => {
-				const postCopy = { ...data.post };
-				data.post.isLiked = !data.post.isLiked;
-				data.post = await like(postCopy);
+				const postCopy = { ...post };
+				post.isLiked = !post.isLiked;
+				post = await like(postCopy);
 			}}
 			class="text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500"
-			style="visibility: {data.post.isRead ? 'visible' : 'hidden'};"
+			style="visibility: {post.isRead ? 'visible' : 'hidden'};"
 		>
-			{data.post.isLiked ? '★' : '☆'}
+			{post.isLiked ? '★' : '☆'}
 		</span>
 	</div>
 </div>
