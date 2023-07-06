@@ -18,7 +18,7 @@
 	};
 
 	const signout = async () => {
-		const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/signout', {
+		const response = await fetch(PUBLIC_BACKEND_API_URL + 'signout', {
 			method: 'POST',
 			credentials: 'include'
 		});

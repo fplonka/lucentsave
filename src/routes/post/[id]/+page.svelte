@@ -41,7 +41,7 @@
 	};
 
 	const deletePost = async (postID: number): Promise<void> => {
-		const response = await await fetch(PUBLIC_BACKEND_API_URL + `/api/deletePost?id=${postID}`, {
+		const response = await await fetch(PUBLIC_BACKEND_API_URL + `deletePost?id=${postID}`, {
 			method: 'DELETE',
 			credentials: 'include'
 		});

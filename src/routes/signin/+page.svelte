@@ -8,7 +8,7 @@
 	let errorMessage = '';
 
 	const signin = async () => {
-		const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/signin', {
+		const response = await fetch(PUBLIC_BACKEND_API_URL + 'signin', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'

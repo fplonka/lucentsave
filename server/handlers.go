@@ -195,12 +195,14 @@ func signoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		MaxAge:   -1, // Delete cookie immediately
 		HttpOnly: true,
+		Secure:   true,
 		Path:     "/",
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:   "loggedIn",
 		Value:  "",
 		MaxAge: -1,
+		Secure: true,
 		Path:   "/",
 	})
 	w.WriteHeader(http.StatusOK)

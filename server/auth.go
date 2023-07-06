@@ -35,13 +35,16 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 		Value:    tokenString,
 		Expires:  expirationTime,
 		HttpOnly: true,
+		Secure:   true,
 		Path:     "/",
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:    "loggedIn",
-		Value:   "true",
-		Expires: expirationTime,
-		Path:    "/",
+		Name:     "loggedIn",
+		Value:    "true",
+		Expires:  expirationTime,
+		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
+		Path:     "/",
 	})
 }
 

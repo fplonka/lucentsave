@@ -6,7 +6,7 @@ export async function updatePostStatus (
 	read: boolean,
 	liked: boolean
 ): Promise<Post> {
-	const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/updatePostStatus', {
+	const response = await fetch(PUBLIC_BACKEND_API_URL + 'updatePostStatus', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'

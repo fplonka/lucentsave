@@ -4,7 +4,7 @@
 	import { filterPosts } from './util';
 	import { markAsRead, like } from '$lib/postActions';
 	import type { Post } from './+page.server';
-	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
+	import { PUBLIC_APPLICATION_URL, PUBLIC_BACKEND_API_URL } from '$env/static/public';
 
 	import DOMPurify from 'dompurify';
 
@@ -19,7 +19,7 @@
 
 	if (browser && !$postsLoaded) {
 		const fetchPosts = async () => {
-			const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/getAllUserPosts', {
+			const response = await fetch(PUBLIC_BACKEND_API_URL + 'getAllUserPosts', {
 				credentials: 'include'
 			});
 			if (response.ok) {
@@ -33,11 +33,6 @@
 
 	$: filteredPosts = filterPosts($posts, $page.url.pathname.substring(1));
 
-	$: console.log(
-		'posts in store:',
-		$posts.map((p: Post) => p.isLiked + ' ' + p.id)
-	);
-
 	let url: string = '';
 	let title: string = '';
 	let body: string = '';
@@ -48,7 +43,7 @@
 		event.preventDefault();
 
 		const response = await fetch(
-			PUBLIC_BACKEND_API_URL + `/api/fetchPage?url=${encodeURIComponent(url)}`,
+			PUBLIC_BACKEND_API_URL + `fetchPage?url=${encodeURIComponent(url)}`,
 			{
 				credentials: 'include'
 			}
@@ -68,16 +63,14 @@
 				let contentDoc = parser.parseFromString(article.content, 'text/html');
 
 				// Convert relative image URLs to absolute
+				// TODO: do this for links in general?
 				let imgs = contentDoc.getElementsByTagName('img');
 				for (let img of imgs) {
 					let urlObject = new URL(img.src);
 					let postUrlObject = new URL(url);
 
 					// Check if the image source has the localhost origin
-					if (
-						urlObject.origin === 'http://localhost:5173' ||
-						urlObject.origin === 'http://localhost:3000'
-					) {
+					if (urlObject.origin == PUBLIC_APPLICATION_URL) {
 						// TODO: adjust when deployed
 
 						// Replace the origin in the image source with the origin of the post URL
@@ -100,7 +93,7 @@
 	const sendPost = async (): Promise<void> => {
 		await posts.set(
 			await (
-				await fetch(PUBLIC_BACKEND_API_URL + '/api/createPost', {
+				await fetch(PUBLIC_BACKEND_API_URL + 'createPost', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'

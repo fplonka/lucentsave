@@ -21,7 +21,7 @@
 	const register = async () => {
 		formSubmitted = true;
 		if (!errorMessage) {
-			const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/createUser', {
+			const response = await fetch(PUBLIC_BACKEND_API_URL + 'createUser', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

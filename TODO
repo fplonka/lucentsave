@@ -9,6 +9,8 @@ figure out centos go install, try 1.20 profile optimized compilation
 
 have post creation return only the created post? what if state gets desynced in some cursed way? refreshing i guess
 
+UI scaling for mobile: title sizes, typography prose-size setting
+
 hook for logging out if loggenin cookie not set??
 
 - loading thing when submitting a post ffs
