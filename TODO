@@ -3,18 +3,16 @@ TODO:
 - animations when changing post status from posts list
 - icons
 
-loading when saving a post
 fix image links again - and do the same for all links actually
 
 figure out centos go install, try 1.20 profile optimized compilation
-
-posts in store
 
 have post creation return only the created post? what if state gets desynced in some cursed way? refreshing i guess
 
 hook for logging out if loggenin cookie not set??
 
-one shade of gray!
+- loading thing when submitting a post ffs
+- loading when saving a post
 
 refactoring: shared between posts list and search/, signin/ and register/
 set up logging

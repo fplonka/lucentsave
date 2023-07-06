@@ -1,27 +1,24 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import { markAsRead, like } from '$lib/postActions';
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
+	import { like, markAsRead } from '$lib/postActions';
 	import { posts } from '../../../stores';
 	import type { Post } from '../../[listType]/+page.server';
-	import { page } from '$app/stores';
-	import { browser } from '$app/environment';
-	import { redirect } from '@sveltejs/kit';
 
-	export let data: PageData;
+	// export let data: PageData;
 
 	let postID: number = parseInt($page.params['id']);
 	let postIndex = $posts.findIndex((p) => p.id === postID);
 	if (postIndex == -1) {
-		console.log('redirecting!');
 		if (browser) {
 			goto('/saved');
 		} else {
 			//return redirect(307, 'saved');
 		}
 	}
-	let post: Post = $posts[postIndex];
+	let post: Post = { ...$posts[postIndex] };
 
 	let deleteState = 'Delete';
 	let deleteTimeout: NodeJS.Timeout;
@@ -96,7 +93,17 @@
 				// Doing this to make things more responsive: we update the client-side state instantly
 				const postCopy = { ...post };
 				post.isRead = !post.isRead;
+
+				const postIndex = $posts.findIndex((p) => p.id === post.id);
+				if (postIndex !== -1) {
+					$posts[postIndex].isRead = !$posts[postIndex].isRead;
+					// let storePostsCopy = [...$posts];
+					// storePostsCopy[postIndex].isRead = !storePostsCopy[postIndex].isRead;
+					// posts.set(storePostsCopy);
+				}
+
 				post = await markAsRead(postCopy);
+				$posts[postIndex] = post;
 			}}
 		>
 			{post.isRead ? 'Mark as unread' : 'Mark as read'}
@@ -105,7 +112,17 @@
 			on:click={async () => {
 				const postCopy = { ...post };
 				post.isLiked = !post.isLiked;
+
+				const postIndex = $posts.findIndex((p) => p.id === post.id);
+				if (postIndex !== -1) {
+					$posts[postIndex].isLiked = !$posts[postIndex].isLiked;
+					// let storePostsCopy = [...$posts];
+					// storePostsCopy[postIndex].isLiked = !storePostsCopy[postIndex].isLiked;
+					// posts.set(storePostsCopy);
+				}
+
 				post = await like(postCopy);
+				$posts[postIndex] = post;
 			}}
 			class="text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500"
 			style="visibility: {post.isRead ? 'visible' : 'hidden'};"

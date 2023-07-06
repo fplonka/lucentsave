@@ -17,7 +17,26 @@
 
 	// export let data: PageData;
 
+	if (browser && !$postsLoaded) {
+		const fetchPosts = async () => {
+			const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/getAllUserPosts', {
+				credentials: 'include'
+			});
+			if (response.ok) {
+				posts.set(await response.json());
+				postsLoaded.set(true);
+				isSignedIn.set(true);
+			}
+		};
+		fetchPosts();
+	}
+
 	$: filteredPosts = filterPosts($posts, $page.url.pathname.substring(1));
+
+	$: console.log(
+		'posts in store:',
+		$posts.map((p: Post) => p.isLiked + ' ' + p.id)
+	);
 
 	let url: string = '';
 	let title: string = '';
@@ -104,7 +123,6 @@
 	const likePostAndUpdate = async (post: Post) => {
 		const postCopy = { ...post };
 
-		// Update post locally first for responsiveness
 		const postIndex = $posts.findIndex((p) => p.id === post.id);
 		if (postIndex !== -1) {
 			$posts[postIndex].isLiked = !post.isLiked;
@@ -121,28 +139,6 @@
 			return 'Invalid URL';
 		}
 	};
-
-	onMount(() => {
-		console.log('getting posts into store');
-		console.log('posts loaded:', $postsLoaded);
-		if (browser && !$postsLoaded) {
-			console.log('getting posts!!');
-			const fetchPosts = async () => {
-				const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/getAllUserPosts', {
-					credentials: 'include'
-				});
-				if (response.ok) {
-					console.log('got posts!!');
-					posts.set(await response.json());
-					postsLoaded.set(true);
-					isSignedIn.set(true);
-					console.log('posts loaded after after:', $postsLoaded);
-				}
-			};
-			fetchPosts();
-			console.log('posts loaded after:', $postsLoaded);
-		}
-	});
 </script>
 
 {#if $page.url.pathname.startsWith('/saved')}
