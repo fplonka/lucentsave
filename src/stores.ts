@@ -6,3 +6,4 @@ import type { Post } from './routes/[listType]/+page.server'
 export const isSignedIn = writable(false)
 
 export const posts: Writable<Post[]> = writable([])
+export const postsLoaded = writable(false)

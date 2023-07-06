@@ -12,6 +12,8 @@ posts in store
 
 have post creation return only the created post? what if state gets desynced in some cursed way? refreshing i guess
 
+hook for logging out if loggenin cookie not set??
+
 one shade of gray!
 
 refactoring: shared between posts list and search/, signin/ and register/

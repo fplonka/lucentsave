@@ -10,7 +10,10 @@
 
 	import { Readability, isProbablyReaderable } from '@mozilla/readability';
 	import { onMount } from 'svelte';
-	import { posts } from '../../stores';
+	import { isSignedIn, posts } from '../../stores';
+	import { postsLoaded } from '../../stores';
+	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
 
 	// export let data: PageData;
 
@@ -76,7 +79,7 @@
 	}
 
 	const sendPost = async (): Promise<void> => {
-		posts.set(
+		await posts.set(
 			await (
 				await fetch(PUBLIC_BACKEND_API_URL + '/api/createPost', {
 					method: 'POST',
@@ -118,6 +121,28 @@
 			return 'Invalid URL';
 		}
 	};
+
+	onMount(() => {
+		console.log('getting posts into store');
+		console.log('posts loaded:', $postsLoaded);
+		if (browser && !$postsLoaded) {
+			console.log('getting posts!!');
+			const fetchPosts = async () => {
+				const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/getAllUserPosts', {
+					credentials: 'include'
+				});
+				if (response.ok) {
+					console.log('got posts!!');
+					posts.set(await response.json());
+					postsLoaded.set(true);
+					isSignedIn.set(true);
+					console.log('posts loaded after after:', $postsLoaded);
+				}
+			};
+			fetchPosts();
+			console.log('posts loaded after:', $postsLoaded);
+		}
+	});
 </script>
 
 {#if $page.url.pathname.startsWith('/saved')}

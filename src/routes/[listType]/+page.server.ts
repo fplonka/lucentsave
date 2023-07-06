@@ -38,3 +38,9 @@ export interface Post {
 // 	var empty: Post[] = []
 // 	return { posts: empty }
 // }
+
+export const load = ({ cookies }) => {
+	if (cookies.get('loggedIn') !== 'true') {
+		throw redirect(307, '/signin')
+	}
+}

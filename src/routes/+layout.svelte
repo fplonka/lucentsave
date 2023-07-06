@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { isSignedIn, posts } from '../stores';
+	import { isSignedIn, posts, postsLoaded } from '../stores';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
@@ -27,6 +27,7 @@
 			dropdownOpen = false;
 			await goto('/signin');
 			isSignedIn.set(false);
+			postsLoaded.set(false);
 		} else {
 			// TODO
 		}
@@ -39,17 +40,6 @@
 				.some((item) => item.trim().startsWith('loggedIn='));
 			isSignedIn.set(cookieExists);
 		}
-		console.log('getting posts into store');
-
-		const fetchPosts = async () => {
-			const response = await fetch(PUBLIC_BACKEND_API_URL + '/api/getAllUserPosts', {
-				credentials: 'include'
-			});
-			if (response.ok) {
-				posts.set(await response.json());
-			}
-		};
-		fetchPosts();
 	});
 </script>
 
