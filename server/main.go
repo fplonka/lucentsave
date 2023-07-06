@@ -38,13 +38,13 @@ func main() {
 		AllowCredentials: true,
 	}).Handler(mux)
 
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Fatal(http.ListenAndServe(":8080", logRequest(handler)))
 }
 
-func logRequest(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func logRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r)
 		fmt.Println()
 		next.ServeHTTP(w, r)
-	}
+	})
 }

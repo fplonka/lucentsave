@@ -12,15 +12,15 @@ import (
 
 func addHandleFuncs(mux *http.ServeMux) {
 	// TODO: middlewhere for checking post owner id == user id ??
-	mux.HandleFunc("/api/getAllUserPosts", logRequest(authMiddleware(getSavedPostsHandler)))
-	mux.HandleFunc("/api/getPost", logRequest(authMiddleware(getPostHandler)))
-	mux.HandleFunc("/api/createPost", logRequest(authMiddleware(createPostHandler)))
-	mux.HandleFunc("/api/deletePost", logRequest(authMiddleware(deletePostHandler)))
-	mux.HandleFunc("/api/updatePostStatus", logRequest(authMiddleware(updatePostStatusHandler)))
-	mux.HandleFunc("/api/createUser", logRequest(createUserHandler))
-	mux.HandleFunc("/api/signout", logRequest(signoutHandler))
-	mux.HandleFunc("/api/signin", logRequest(signinHandler))
-	mux.HandleFunc("/api/fetchPage", logRequest(fetchPageHandler))
+	mux.HandleFunc("/api/getAllUserPosts", authMiddleware(getSavedPostsHandler))
+	mux.HandleFunc("/api/getPost", authMiddleware(getPostHandler))
+	mux.HandleFunc("/api/createPost", authMiddleware(createPostHandler))
+	mux.HandleFunc("/api/deletePost", authMiddleware(deletePostHandler))
+	mux.HandleFunc("/api/updatePostStatus", authMiddleware(updatePostStatusHandler))
+	mux.HandleFunc("/api/createUser", createUserHandler)
+	mux.HandleFunc("/api/signout", signoutHandler)
+	mux.HandleFunc("/api/signin", signinHandler)
+	mux.HandleFunc("/api/fetchPage", fetchPageHandler)
 }
 
 func writeErrorResponse(err error, w http.ResponseWriter) {
