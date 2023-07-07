@@ -1,5 +1,4 @@
 import { redirect } from '@sveltejs/kit'
-import { isSignedIn } from '../stores.js'
 
 // export const ssr = false
 

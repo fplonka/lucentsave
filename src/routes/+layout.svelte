@@ -89,8 +89,8 @@
 	</nav>
 {/if}
 
-<div class="mb-8">
-	<div class="px-4 sm:px-6 mx-auto max-w-2xl xl:max-w-3xl relative">
+<div class="mb-8" on:click={() => (dropdownOpen = false)}>
+	<div class="px-4 sm:px-6 mx-auto max-w-2xl lg:max-w-3xl relative">
 		<slot />
 	</div>
 </div>

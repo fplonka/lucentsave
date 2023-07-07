@@ -43,10 +43,13 @@
 
 	async function fetchAndParseURL(event: Event) {
 		isSaving = true;
+		let urlToSave = url;
+		url = '';
+
 		event.preventDefault();
 
 		const response = await fetch(
-			PUBLIC_BACKEND_API_URL + `fetchPage?url=${encodeURIComponent(url)}`,
+			PUBLIC_BACKEND_API_URL + `fetchPage?url=${encodeURIComponent(urlToSave)}`,
 			{
 				credentials: 'include'
 			}
@@ -74,7 +77,7 @@
 				let imgs = contentDoc.getElementsByTagName('img');
 				for (let img of imgs) {
 					let urlObject = new URL(img.src);
-					let postUrlObject = new URL(url);
+					let postUrlObject = new URL(urlToSave);
 
 					// Check if the image source has the localhost origin
 					if (urlObject.origin == PUBLIC_APPLICATION_URL) {
@@ -89,9 +92,7 @@
 
 				// console.log('title is: ', title);
 				// console.log('body is: ', body);
-				await sendPost();
-
-				url = '';
+				await sendPost(urlToSave);
 			} else {
 				savingText = 'Failed to parse article';
 			}
@@ -100,7 +101,7 @@
 		}
 	}
 
-	const sendPost = async (): Promise<void> => {
+	const sendPost = async (url: string): Promise<void> => {
 		const response = await fetch(PUBLIC_BACKEND_API_URL + 'createPost', {
 			method: 'POST',
 			headers: {

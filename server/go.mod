@@ -12,4 +12,4 @@ require (
 	github.com/rs/cors v1.9.0
 )
 
-require github.com/sym01/htmlsanitizer v1.0.1 // indirect
+require github.com/sym01/htmlsanitizer v1.0.1

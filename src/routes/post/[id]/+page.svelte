@@ -54,74 +54,75 @@
 					>{post.url}</a
 				>
 			</div>
-			<!-- <div
-				on:click={initiateDelete}
-				class="text-black text-xl p-2 font-bold cursor-pointer hover:text-gray-500 opacity-0 group-hover:opacity-100"
+			<span
+				on:click={async () => {
+					if (confirm('Are you sure you want to delete this post?')) {
+						await deletePost(post.id);
+					}
+				}}
+				class=" text-black px-2 py-1 cursor-pointer font-black hover:text-gray-500"
 			>
-				{deleteState}
-			</div> -->
-			<!-- <button
-				class="opacity-0 group-hover:opacity-100 px-2 py-1 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
-				on:click={() => initiateDelete(post.id)}
-			>
-				{deleteState}
-			</button> -->
+				✕
+			</span>
 		</div>
 		<div
 			class="prose
-			prose-base lg:prose-lg text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
+			prose-base md:prose-lg text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
 			prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500
 			relative prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 prose-code:font-normal prose-code:p-0.5
 		
 		"
 		>
-			<!-- <div
-			class="prose prose-sm sm:prose-base xl:prose-lg text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
-			prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500
-			relative prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 prose-code:font-normal prose-code:p-0.5 leading-loose"
-		> -->
 			{@html post.body}
 		</div>
 	</div>
 </div>
 
 <div class="space-y-4 mt-4">
-	<div class="flex space-x-2">
-		<button
-			class="py-1 px-2 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
-			on:click={async () => {
-				// Doing this to make things more responsive: we update the client-side state instantly
-				const postCopy = { ...post };
-				post.isRead = !post.isRead;
+	<div class="flex justify-between items-center">
+		<div class="flex space-x-2">
+			<button
+				class="py-1 px-2 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
+				on:click={async () => {
+					// Doing this to make things more responsive: we update the client-side state instantly
+					const postCopy = { ...post };
+					post.isRead = !post.isRead;
 
-				const postIndex = $posts.findIndex((p) => p.id === post.id);
-				if (postIndex !== -1) {
-					$posts[postIndex].isRead = !$posts[postIndex].isRead;
-				}
+					const postIndex = $posts.findIndex((p) => p.id === post.id);
+					if (postIndex !== -1) {
+						$posts[postIndex].isRead = !$posts[postIndex].isRead;
+					}
 
-				post = await markAsRead(postCopy);
-				$posts[postIndex] = post;
-			}}
-		>
-			{post.isRead ? 'Mark as unread' : 'Mark as read'}
-		</button>
+					post = await markAsRead(postCopy);
+					$posts[postIndex] = post;
+				}}
+			>
+				{post.isRead ? 'Mark as Unread' : 'Mark as Read'}
+			</button>
+			<span
+				on:click={async () => {
+					const postCopy = { ...post };
+					post.isLiked = !post.isLiked;
+
+					const postIndex = $posts.findIndex((p) => p.id === post.id);
+					if (postIndex !== -1) {
+						$posts[postIndex].isLiked = !$posts[postIndex].isLiked;
+					}
+
+					post = await like(postCopy);
+					$posts[postIndex] = post;
+				}}
+				class="text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500"
+				style="visibility: {post.isRead ? 'visible' : 'hidden'};"
+			>
+				{post.isLiked ? '★' : '☆'}
+			</span>
+		</div>
 		<span
-			on:click={async () => {
-				const postCopy = { ...post };
-				post.isLiked = !post.isLiked;
-
-				const postIndex = $posts.findIndex((p) => p.id === post.id);
-				if (postIndex !== -1) {
-					$posts[postIndex].isLiked = !$posts[postIndex].isLiked;
-				}
-
-				post = await like(postCopy);
-				$posts[postIndex] = post;
-			}}
 			class="text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500"
-			style="visibility: {post.isRead ? 'visible' : 'hidden'};"
+			on:click={() => window.scrollTo(0, 0)}
 		>
-			{post.isLiked ? '★' : '☆'}
+			↑
 		</span>
 	</div>
 </div>
