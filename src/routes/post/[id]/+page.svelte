@@ -57,7 +57,7 @@
 	<div class="border-b-2 border-dashed border-black">
 		<div on:mouseleave={reset} class="flex justify-between items-center group">
 			<div>
-				<h2 class="text-2xl font-bold text-black">{post.title}</h2>
+				<h2 class="text-xl md:text-2xl font-bold text-black">{post.title}</h2>
 				<a href={post.url} class="text-sm text-black block hover:underline hover:text-gray-500"
 					>{post.url}</a
 				>
@@ -68,17 +68,17 @@
 			>
 				{deleteState}
 			</div> -->
-			<button
+			<!-- <button
 				class="opacity-0 group-hover:opacity-100 px-2 py-1 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
 				on:click={() => initiateDelete(post.id)}
 			>
 				{deleteState}
-			</button>
+			</button> -->
 		</div>
 		<div
-			class="prose text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
+			class="prose prose-sm sm:prose-base xl:prose-lg text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
 			prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500
-			relative prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 prose-code:font-normal prose-code:p-0.5"
+			relative prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 prose-code:font-normal prose-code:p-0.5 leading-loose"
 		>
 			{@html post.body}
 		</div>

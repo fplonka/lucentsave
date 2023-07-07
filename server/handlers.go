@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/mail"
+	"os"
 	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
@@ -195,14 +196,14 @@ func signoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		MaxAge:   -1, // Delete cookie immediately
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   os.Getenv("ENV") == "production",
 		Path:     "/",
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:   "loggedIn",
 		Value:  "",
 		MaxAge: -1,
-		Secure: true,
+		Secure: os.Getenv("ENV") == "production",
 		Path:   "/",
 	})
 	w.WriteHeader(http.StatusOK)

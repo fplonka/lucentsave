@@ -5,6 +5,11 @@ TODO:
 
 fix image links again - and do the same for all links actually
 
+- keep nav links (start with "#" probably)
+- website title in the tab bar
+
+back to top button
+
 figure out centos go install, try 1.20 profile optimized compilation
 
 have post creation return only the created post? what if state gets desynced in some cursed way? refreshing i guess
@@ -16,5 +21,4 @@ hook for logging out if loggenin cookie not set??
 - loading thing when submitting a post ffs
 - loading when saving a post
 
-refactoring: shared between posts list and search/, signin/ and register/
 set up logging

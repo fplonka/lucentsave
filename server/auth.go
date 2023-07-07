@@ -35,7 +35,7 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 		Value:    tokenString,
 		Expires:  expirationTime,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   os.Getenv("ENV") == "production",
 		Path:     "/",
 	})
 	http.SetCookie(w, &http.Cookie{
@@ -43,7 +43,7 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 		Value:    "true",
 		Expires:  expirationTime,
 		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
+		Secure:   os.Getenv("ENV") == "production",
 		Path:     "/",
 	})
 }
