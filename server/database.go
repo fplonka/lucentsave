@@ -46,7 +46,7 @@ func prepareStatements() error {
 	if err != nil {
 		return err
 	}
-	getUserPostsStmt, err = db.Prepare("SELECT id, title, body, read, liked, url, added_at FROM posts WHERE user_id = $1 ORDER BY added_at DESC")
+	getUserPostsStmt, err = db.Prepare("SELECT id, title, read, liked, url, added_at FROM posts WHERE user_id = $1 ORDER BY added_at DESC")
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func getUserPosts(userID int) ([]Post, error) {
 
 	for rows.Next() {
 		var post Post
-		if err := rows.Scan(&post.ID, &post.Title, &post.Body, &post.IsRead, &post.IsLiked, &post.URL, &post.TimeAdded); err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.IsRead, &post.IsLiked, &post.URL, &post.TimeAdded); err != nil {
 			return nil, err
 		}
 		posts = append(posts, post)

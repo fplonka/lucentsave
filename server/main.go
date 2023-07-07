@@ -45,6 +45,7 @@ func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r)
 		fmt.Println()
+		//time.Sleep(time.Second * 3)
 		next.ServeHTTP(w, r)
 	})
 }

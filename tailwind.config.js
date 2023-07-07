@@ -3,14 +3,24 @@ export default {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	theme: {
 		extend: {
-			typography: {
+			typography: theme => ({
 				quoteless: {
 					css: {
 						'blockquote p:first-of-type::before': { content: 'none' },
 						'blockquote p:first-of-type::after': { content: 'none' }
 					}
+				},
+				base: {
+					css: {
+						lineHeight: 1.5
+					}
+				},
+				lg: {
+					css: {
+						lineHeight: 1.75
+					}
 				}
-			},
+			}),
 			fontFamily: {
 				serif: ['Bookerly'],
 				sans: ['Inter']

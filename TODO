@@ -16,6 +16,8 @@ have post creation return only the created post? what if state gets desynced in 
 
 UI scaling for mobile: title sizes, typography prose-size setting
 
+having signin and fetch posts as one request?
+
 hook for logging out if loggenin cookie not set??
 
 - loading thing when submitting a post ffs

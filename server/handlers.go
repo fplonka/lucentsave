@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/sym01/htmlsanitizer"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -52,6 +53,7 @@ func getUserIdFromRequest(r *http.Request) int {
 }
 
 // Gets all posts for a given user, regardless of whether they're read or liked
+// NOTE: this doesn't return the post bodies! just the "metadata"
 func getSavedPostsHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIdFromRequest(r)
 	writePostsListResponse(userID, w)
@@ -87,6 +89,8 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	var post Post
 
+	// TODO: method types everywhere...
+
 	// Decode the incoming Post json
 	err := json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
@@ -94,13 +98,25 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = addPost(post, userID)
-	if err != nil {
-		writeErrorResponse(err, w)
+	maxLen := 50000
+	if len(post.Title)+len(post.Body)+len(post.URL) > maxLen {
+		http.Error(w, "Post too long to article", http.StatusInternalServerError)
 		return
 	}
 
-	// Return update posts list
+	post.Body, err = htmlsanitizer.SanitizeString(post.Body)
+	if err != nil {
+		http.Error(w, "Failed to save article", http.StatusInternalServerError)
+		return
+	}
+
+	err = addPost(post, userID)
+	if err != nil {
+		http.Error(w, "Failed to save article", http.StatusInternalServerError)
+		return
+	}
+
+	// Return updated posts list
 	writePostsListResponse(userID, w)
 }
 
@@ -168,7 +184,9 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authorizeAndWriteToken(w, user)
+	// Return auth token, don't write posts list in response since a new user won't have any,
+	// that's used when signing in
+	authorizeThenWriteTokenAndPostsList(w, user, false)
 }
 
 func signinHandler(w http.ResponseWriter, r *http.Request) {
@@ -187,7 +205,7 @@ func signinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authorizeAndWriteToken(w, user)
+	authorizeThenWriteTokenAndPostsList(w, user, true)
 }
 
 func signoutHandler(w http.ResponseWriter, r *http.Request) {

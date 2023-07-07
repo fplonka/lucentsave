@@ -6,19 +6,11 @@
 	import { like, markAsRead } from '$lib/postActions';
 	import { posts } from '../../../stores';
 	import type { Post } from '../../[listType]/+page.server';
+	import type { PageData } from './$types';
 
-	// export let data: PageData;
+	export let data: PageData;
 
-	let postID: number = parseInt($page.params['id']);
-	let postIndex = $posts.findIndex((p) => p.id === postID);
-	if (postIndex == -1) {
-		if (browser) {
-			goto('/saved');
-		} else {
-			//return redirect(307, 'saved');
-		}
-	}
-	let post: Post = { ...$posts[postIndex] };
+	let post = data.post;
 
 	let deleteState = 'Delete';
 	let deleteTimeout: NodeJS.Timeout;
@@ -76,10 +68,18 @@
 			</button> -->
 		</div>
 		<div
+			class="prose
+			prose-base lg:prose-lg text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
+			prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500
+			relative prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 prose-code:font-normal prose-code:p-0.5
+		
+		"
+		>
+			<!-- <div
 			class="prose prose-sm sm:prose-base xl:prose-lg text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
 			prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500
 			relative prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 prose-code:font-normal prose-code:p-0.5 leading-loose"
-		>
+		> -->
 			{@html post.body}
 		</div>
 	</div>
@@ -97,9 +97,6 @@
 				const postIndex = $posts.findIndex((p) => p.id === post.id);
 				if (postIndex !== -1) {
 					$posts[postIndex].isRead = !$posts[postIndex].isRead;
-					// let storePostsCopy = [...$posts];
-					// storePostsCopy[postIndex].isRead = !storePostsCopy[postIndex].isRead;
-					// posts.set(storePostsCopy);
 				}
 
 				post = await markAsRead(postCopy);
@@ -116,9 +113,6 @@
 				const postIndex = $posts.findIndex((p) => p.id === post.id);
 				if (postIndex !== -1) {
 					$posts[postIndex].isLiked = !$posts[postIndex].isLiked;
-					// let storePostsCopy = [...$posts];
-					// storePostsCopy[postIndex].isLiked = !storePostsCopy[postIndex].isLiked;
-					// posts.set(storePostsCopy);
 				}
 
 				post = await like(postCopy);

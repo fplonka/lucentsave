@@ -6,8 +6,6 @@
 	import type { Post } from './+page.server';
 	import { PUBLIC_APPLICATION_URL, PUBLIC_BACKEND_API_URL } from '$env/static/public';
 
-	import DOMPurify from 'dompurify';
-
 	import { Readability, isProbablyReaderable } from '@mozilla/readability';
 	import { onMount } from 'svelte';
 	import { isSignedIn, posts } from '../../stores';
@@ -39,7 +37,12 @@
 
 	$: isUrlValid = /^http(s)?:\/\/[^\s$.?#].[^\s]*$/.test(url);
 
+	const waitingText = 'Saving, please wait...';
+	let isSaving = false;
+	let savingText = waitingText;
+
 	async function fetchAndParseURL(event: Event) {
+		isSaving = true;
 		event.preventDefault();
 
 		const response = await fetch(
@@ -48,6 +51,10 @@
 				credentials: 'include'
 			}
 		);
+		if (!response.ok) {
+			savingText = 'Failed to load page';
+			return;
+		}
 		const html = await response.text();
 
 		const parser = new DOMParser();
@@ -79,30 +86,35 @@
 				}
 
 				body = contentDoc.body.innerHTML;
-				body = DOMPurify.sanitize(body);
 
 				// console.log('title is: ', title);
 				// console.log('body is: ', body);
 				await sendPost();
 
 				url = '';
+			} else {
+				savingText = 'Failed to parse article';
 			}
+		} else {
+			savingText = 'Failed to parse article';
 		}
 	}
 
 	const sendPost = async (): Promise<void> => {
-		await posts.set(
-			await (
-				await fetch(PUBLIC_BACKEND_API_URL + 'createPost', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({ url, title, body }),
-					credentials: 'include'
-				})
-			).json()
-		);
+		const response = await fetch(PUBLIC_BACKEND_API_URL + 'createPost', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ url, title, body }),
+			credentials: 'include'
+		});
+		if (response.ok) {
+			posts.set(await response.json());
+			isSaving = false;
+		} else {
+			savingText = await response.text();
+		}
 	};
 
 	const updatePost = async (post: Post) => {
@@ -154,6 +166,15 @@
 			disabled={!isUrlValid}
 		/>
 	</form>
+{/if}
+
+{#if $page.url.pathname.startsWith('/saved') && isSaving}
+	<div class="flex justify-between items-center mt-4 border-black border-b-2 border-dashed pb-4">
+		<div>
+			<div class="text-sm block italic">{savingText}</div>
+		</div>
+		<div />
+	</div>
 {/if}
 
 <div class="mt-4">

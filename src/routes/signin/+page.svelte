@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
-	import { isSignedIn } from '../../stores';
+	import { isSignedIn, posts, postsLoaded } from '../../stores';
 
 	let email = '';
 	let password = '';
@@ -18,6 +19,11 @@
 		});
 
 		if (response.ok) {
+			// browser???
+			if (browser) {
+				posts.set(await response.json());
+				postsLoaded.set(true);
+			}
 			isSignedIn.set(true);
 			goto('/saved');
 		} else {
@@ -26,20 +32,20 @@
 	};
 </script>
 
-<div class="mt-12 mb-12 mx-auto w-max border-black border-2 p-8">
+<div class="mt-12 mb-12 mx-auto max-w-max border-black border-2 p-6 sm:p-8">
 	<div class="space-y-2">
 		<div class="flex items-baseline font-semibold">
-			<span class="text-black text-2xl font-extrabold mr-2">Lucent</span>
+			<span class="text-black text-xl sm:text-2xl font-extrabold mr-2">Lucent</span>
 			<span class="text-black text-base font-light">[ˈlü-sᵊnt]</span>
 			<span class="text-black text-base font-semibold italic ml-2">adjective</span>
 		</div>
 		<div class="flex">
 			<span class="font-bold mr-1 w-4 inline-block">1.</span>
-			<span class=" text-black">Glowing with light : Luminous</span>
+			<span class=" text-black">Glowing with light</span>
 		</div>
 		<div class="flex">
 			<span class="font-bold mr-1 w-4 inline-block">2.</span>
-			<span class=" text-black">Marked by clarity or translucence : Clear</span>
+			<span class=" text-black">Marked by clarity or translucence</span>
 		</div>
 	</div>
 </div>

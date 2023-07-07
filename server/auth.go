@@ -48,7 +48,7 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 	})
 }
 
-func authorizeAndWriteToken(w http.ResponseWriter, user User) {
+func authorizeThenWriteTokenAndPostsList(w http.ResponseWriter, user User, writePosts bool) {
 	var userID int
 	var hashedPassword []byte
 	err := getUserHashedPassword.QueryRow(user.Email).Scan(&userID, &hashedPassword)
@@ -64,8 +64,7 @@ func authorizeAndWriteToken(w http.ResponseWriter, user User) {
 
 	generateAndSetAuthToken(w, userID)
 
-	// Respond to the client
-	w.WriteHeader(http.StatusCreated)
+	writePostsListResponse(userID, w)
 }
 
 type key int

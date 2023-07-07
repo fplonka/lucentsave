@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
-	import { isSignedIn } from '../../stores';
+	import { isSignedIn, postsLoaded } from '../../stores';
 
 	let email = ''; // Must be a valid email.
 	let password = '';
@@ -32,6 +32,7 @@
 
 			if (response.ok) {
 				isSignedIn.set(true);
+				postsLoaded.set(true);
 				goto('/saved');
 			} else {
 				errorMessage = await response.text();
