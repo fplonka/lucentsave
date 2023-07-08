@@ -46,7 +46,7 @@
 </script>
 
 <div class="space-y-4 mt-4">
-	<div class="border-b-2 border-dashed border-black">
+	<div class="border-b-2 border-dashed border-black overflow-auto break-words">
 		<div on:mouseleave={reset} class="flex justify-between items-center group">
 			<div>
 				<h2 class="text-xl md:text-2xl font-bold text-black">{post.title}</h2>
