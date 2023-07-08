@@ -76,7 +76,7 @@
 			<input
 				type="submit"
 				value="Sign in"
-				class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-500 cursor-pointer"
+				class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
 			/>
 			<span class="text-black ml-2">{errorMessage}</span>
 		</div>
