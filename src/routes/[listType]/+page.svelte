@@ -73,19 +73,32 @@
 				let contentDoc = parser.parseFromString(article.content, 'text/html');
 
 				// Convert relative image URLs to absolute
+				// TODO: do this for links in general?
 				let imgs = contentDoc.getElementsByTagName('img');
 				for (let img of imgs) {
-					let urlObject = new URL(img.src, urlToSave);
-					img.src = urlObject.href;
+					let urlObject = new URL(img.src);
+					let postUrlObject = new URL(urlToSave);
+
+					if (urlObject.origin == PUBLIC_APPLICATION_URL) {
+						img.src = postUrlObject.origin + urlObject.pathname + urlObject.search + urlObject.hash;
+					}
 				}
 
-				// Convert relative URLs in anchor tags to absolute
 				let links = contentDoc.getElementsByTagName('a');
 				for (let link of links) {
-					if (!link.href.startsWith('#')) {
-						// skip navigation links
-						let urlObject = new URL(link.href, urlToSave);
-						link.href = urlObject.href;
+					let urlObject = new URL(link.href);
+					let postUrlObject = new URL(urlToSave);
+
+					console.log('raw link:', link.href);
+					console.log(urlObject.origin + '_' + urlObject.pathname + '_' + urlObject.hash);
+
+					if (link.href.startsWith(PUBLIC_APPLICATION_URL + '/saved#')) {
+						// Skip navigation link
+						continue;
+					}
+					if (urlObject.origin == PUBLIC_APPLICATION_URL) {
+						link.href =
+							postUrlObject.origin + urlObject.pathname + urlObject.search + urlObject.hash;
 					}
 				}
 

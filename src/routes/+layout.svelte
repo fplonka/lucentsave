@@ -99,20 +99,3 @@
 		<slot />
 	</div>
 </div>
-
-<body>
-	<script>
-		const response = await fetch(PUBLIC_BACKEND_API_URL + 'signout', {
-			method: 'POST',
-			credentials: 'include'
-		});
-
-		if (response.ok) {
-			console.log('signed out!!');
-			await goto('/signin');
-		} else {
-			// TODO
-		}
-	</script>
-	<div>test</div>
-</body>
