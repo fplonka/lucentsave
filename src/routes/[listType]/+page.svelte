@@ -89,9 +89,6 @@
 					let urlObject = new URL(link.href);
 					let postUrlObject = new URL(urlToSave);
 
-					console.log('raw link:', link.href);
-					console.log(urlObject.origin + '_' + urlObject.pathname + '_' + urlObject.hash);
-
 					if (link.href.startsWith(PUBLIC_APPLICATION_URL + '/saved#')) {
 						// Skip navigation link
 						continue;

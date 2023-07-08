@@ -88,19 +88,15 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIdFromRequest(r)
 
 	var post Post
-	fmt.Println("Creating post from body: ", r.Body)
 
 	// TODO: method types everywhere...
 
 	// Decode the incoming Post json
 	err := json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
-		fmt.Println(err.Error())
 		writeErrorResponse(err, w)
 		return
 	}
-
-	fmt.Println("Creating post:", post)
 
 	maxLen := 200000
 	if len(post.Title)+len(post.Body)+len(post.URL) > maxLen {

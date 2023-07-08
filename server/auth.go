@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -29,8 +28,6 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 		http.Error(w, "Failed to authenticate", http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Println("set auth:", tokenString)
 
 	// Set the new token as a cookie
 	http.SetCookie(w, &http.Cookie{
