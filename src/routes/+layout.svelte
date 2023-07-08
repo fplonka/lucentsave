@@ -20,6 +20,7 @@
 			await goto('/signin');
 			isSignedIn.set(false);
 			postsLoaded.set(false);
+			posts.set([]);
 		} else {
 			// TODO
 		}

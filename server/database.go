@@ -28,15 +28,15 @@ var (
 	ErrUnauthorized = errors.New("unauthorized")
 	ErrNotFound     = errors.New("not found")
 
-	checkUserIsPostOwnerStmt *sql.Stmt
-	getUserPostsStmt         *sql.Stmt
-	getPostStmt              *sql.Stmt
-	addPostStmt              *sql.Stmt
-	deletePostStmt           *sql.Stmt
-	updatePostStatusStmt     *sql.Stmt
-	getUserByEmail           *sql.Stmt
-	getUserHashedPassword    *sql.Stmt
-	addUser                  *sql.Stmt
+	checkUserIsPostOwnerStmt  *sql.Stmt
+	getUserPostsStmt          *sql.Stmt
+	getPostStmt               *sql.Stmt
+	addPostStmt               *sql.Stmt
+	deletePostStmt            *sql.Stmt
+	updatePostStatusStmt      *sql.Stmt
+	getUserIDByEmailStmt      *sql.Stmt
+	getUserHashedPasswordStmt *sql.Stmt
+	addUserStmt               *sql.Stmt
 )
 
 func prepareStatements() error {
@@ -54,7 +54,7 @@ func prepareStatements() error {
 	if err != nil {
 		return err
 	}
-	addPostStmt, err = db.Prepare("INSERT INTO posts (user_id, title, body, url, added_at) VALUES ($1, $2, $3, $4, $5)")
+	addPostStmt, err = db.Prepare("INSERT INTO posts (user_id, title, body, url, added_at) VALUES ($1, $2, $3, $4, $5) RETURNING id")
 	if err != nil {
 		return err
 	}
@@ -66,15 +66,15 @@ func prepareStatements() error {
 	if err != nil {
 		return err
 	}
-	getUserByEmail, err = db.Prepare("SELECT email FROM users WHERE email = $1")
+	getUserIDByEmailStmt, err = db.Prepare("SELECT id FROM users WHERE email = $1")
 	if err != nil {
 		return err
 	}
-	getUserHashedPassword, err = db.Prepare("SELECT id, hashed_password FROM users WHERE email = $1")
+	getUserHashedPasswordStmt, err = db.Prepare("SELECT id, hashed_password FROM users WHERE email = $1")
 	if err != nil {
 		return err
 	}
-	addUser, err = db.Prepare("INSERT INTO users (email, hashed_password) VALUES ($1, $2)")
+	addUserStmt, err = db.Prepare("INSERT INTO users (email, hashed_password) VALUES ($1, $2) RETURNING id")
 	if err != nil {
 		return err
 	}
@@ -140,14 +140,24 @@ func getPost(userID, postID int) (Post, error) {
 	return post, nil
 }
 
-func addPost(post Post, userID int) error {
+func addPost(post Post, userID int) (int, error) {
 	// By default, a post will have read and liked set to false
-	_, err := addPostStmt.Exec(userID, post.Title, post.Body, post.URL, time.Now().Unix())
+	var id int
+	err := addPostStmt.QueryRow(userID, post.Title, post.Body, post.URL, time.Now().Unix()).Scan(&id)
 
 	if err != nil {
-		return err
+		return -1, err
 	}
-	return nil
+	return id, nil
+}
+
+func addUser(user User, hashedPassword []byte) (int, error) {
+	var id int
+	err := addUserStmt.QueryRow(user.Email, hashedPassword).Scan(&id)
+	if err != nil {
+		return -1, err
+	}
+	return id, nil
 }
 
 func deletePost(userID, postID int) error {
@@ -181,11 +191,13 @@ func updatePostStatus(userID, postID int, read, liked bool) error {
 	return nil
 }
 
-func checkEmailIsUsed(email string) bool {
-	var existingUser User
-	err := getUserByEmail.QueryRow(email).Scan(&existingUser.Email)
-	// Slightly misleading: returns true if email is not taken but some other error occurs. Should be rare
-	return err != sql.ErrNoRows
+func getIDIfUserExists(email string) (int, error) {
+	var id int
+	err := getUserIDByEmailStmt.QueryRow(email).Scan(&id)
+	if err != nil {
+		return -1, err
+	}
+	return id, nil
 }
 
 // TODO: research indexes, transactions

@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"golang.org/x/crypto/bcrypt"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Claims struct {
@@ -16,7 +16,7 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
+func generateAndSetAuthToken(w http.ResponseWriter, userID int) error {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		UserID:         userID,
@@ -25,8 +25,7 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
-		http.Error(w, "Failed to authenticate", http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	// Set the new token as a cookie
@@ -47,25 +46,8 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	})
-}
 
-func authorizeThenWriteTokenAndPostsList(w http.ResponseWriter, user User, writePosts bool) {
-	var userID int
-	var hashedPassword []byte
-	err := getUserHashedPassword.QueryRow(user.Email).Scan(&userID, &hashedPassword)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusUnauthorized)
-		return
-	}
-
-	if err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(user.Password)); err != nil {
-		http.Error(w, "Incorrect password", http.StatusUnauthorized)
-		return
-	}
-
-	generateAndSetAuthToken(w, userID)
-
-	writePostsListResponse(userID, w)
+	return nil
 }
 
 type key int
@@ -81,10 +63,12 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			if err == http.ErrNoCookie {
 				// If the cookie is not set, return an unauthorized status
 				w.WriteHeader(http.StatusUnauthorized)
+				log.Warn().Err(err).Msg("No token cookie provided")
 				return
 			}
 			// For any other type of error, return a bad request status
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
+			log.Error().Err(err).Msg("Failed to get request's token cookie")
 			return
 		}
 
@@ -96,13 +80,16 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		})
 		if err != nil {
 			if err == jwt.ErrSignatureInvalid {
+				log.Warn().Err(err).Msg("Invalid token signature")
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+			log.Error().Err(err).Msg("Failed to parse token string")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		if !tkn.Valid {
+			log.Warn().Err(err).Msg("Invalid auth token")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -115,14 +102,4 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// Call the next handler function with the updated context
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
-}
-
-func trace(s string) (string, time.Time) {
-	log.Println("START:", s)
-	return s, time.Now()
-}
-
-func un(s string, startTime time.Time) {
-	endTime := time.Now()
-	log.Println("  END:", s, "ElapsedTime in seconds:", endTime.Sub(startTime))
 }

@@ -50,11 +50,11 @@
 		</div>
 		<div class="flex">
 			<span class="font-bold mr-1 w-4 inline-block">1.</span>
-			<span class=" text-black">Glowing with light : Luminous</span>
+			<span class=" text-black">Glowing with light</span>
 		</div>
 		<div class="flex">
 			<span class="font-bold mr-1 w-4 inline-block">2.</span>
-			<span class=" text-black">Marked by clarity or translucence : Clear</span>
+			<span class=" text-black">Marked by clarity or translucence</span>
 		</div>
 	</div>
 </div>

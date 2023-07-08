@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,10 +10,13 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/sym01/htmlsanitizer"
 	"golang.org/x/crypto/bcrypt"
 )
 
+// TODO: method types everywhere...
 func addHandleFuncs(mux *http.ServeMux) {
 	// TODO: middlewhere for checking post owner id == user id ??
 	mux.HandleFunc("/api/getAllUserPosts", authMiddleware(getSavedPostsHandler))
@@ -21,9 +25,9 @@ func addHandleFuncs(mux *http.ServeMux) {
 	mux.HandleFunc("/api/deletePost", authMiddleware(deletePostHandler))
 	mux.HandleFunc("/api/updatePostStatus", authMiddleware(updatePostStatusHandler))
 	mux.HandleFunc("/api/createUser", createUserHandler)
-	mux.HandleFunc("/api/signout", signoutHandler)
+	mux.HandleFunc("/api/signout", authMiddleware(signoutHandler))
 	mux.HandleFunc("/api/signin", signinHandler)
-	mux.HandleFunc("/api/fetchPage", fetchPageHandler)
+	mux.HandleFunc("/api/fetchPage", authMiddleware(fetchPageHandler))
 }
 
 func writeErrorResponse(err error, w http.ResponseWriter) {
@@ -37,44 +41,64 @@ func writeErrorResponse(err error, w http.ResponseWriter) {
 	}
 }
 
-func writePostsListResponse(userID int, w http.ResponseWriter) {
-	posts, err := getUserPosts(userID)
-	if err != nil {
-		writeErrorResponse(err, w)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(posts)
-}
-
 func getUserIdFromRequest(r *http.Request) int {
 	return r.Context().Value(userIDKey).(int)
+}
+
+func writeUserPosts(userID int, w http.ResponseWriter, log zerolog.Logger) error {
+	posts, err := getUserPosts(userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get posts from database")
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(posts)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to encode posts")
+		return err
+	}
+	return nil
 }
 
 // Gets all posts for a given user, regardless of whether they're read or liked
 // NOTE: this doesn't return the post bodies! just the "metadata"
 func getSavedPostsHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIdFromRequest(r)
-	writePostsListResponse(userID, w)
+
+	log := log.With().Str("endpoint", "/getAllUserPosts").Int("userID", userID).Logger()
+
+	err := writeUserPosts(userID, w, log)
+	if err != nil {
+		http.Error(w, "Failed to get user posts", http.StatusInternalServerError)
+	} else {
+		log.Info().Msg("Success")
+	}
 }
 
 func getPostHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIdFromRequest(r)
 	queryParams := r.URL.Query()
 	postIDStr := queryParams.Get("id")
+
+	log := log.With().Str("endpoint", "/getPost").Int("userID", userID).Logger()
+
 	if postIDStr == "" {
+		log.Warn().Msg("No ID provided")
 		http.Error(w, "Post ID is required", http.StatusBadRequest)
 		return
 	}
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
+		log.Warn().Err(err).Msg("Post ID was not integer")
 		http.Error(w, "Post ID must be an integer", http.StatusBadRequest)
 		return
 	}
 
+	log = log.With().Int("postID", postID).Logger()
+
 	post, err := getPost(userID, postID)
 	if err != nil {
+		log.Warn().Err(err).Msg("Failed to get post from database")
 		writeErrorResponse(err, w)
 		return
 	}
@@ -82,133 +106,210 @@ func getPostHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(post)
+
+	log.Info().Msg("Success")
 }
 
 func createPostHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIdFromRequest(r)
 
-	var post Post
+	log := log.With().Str("endpoint", "/createPost").Int("userID", userID).Logger()
 
-	// TODO: method types everywhere...
+	var post Post
 
 	// Decode the incoming Post json
 	err := json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to decode post from request body")
 		writeErrorResponse(err, w)
 		return
 	}
 
 	maxLen := 200000
 	if len(post.Title)+len(post.Body)+len(post.URL) > maxLen {
-		http.Error(w, "Post too long to article", http.StatusInternalServerError)
+		log.Warn().Str("url", post.URL).Msg("Post too long to save")
+		http.Error(w, "Article too long to save", http.StatusInternalServerError)
 		return
 	}
 
 	post.Body, err = htmlsanitizer.SanitizeString(post.Body)
 	if err != nil {
+		log.Error().Str("url", post.URL).Err(err).Msg("Failed to sanitize post body")
 		http.Error(w, "Failed to save article", http.StatusInternalServerError)
 		return
 	}
 
-	err = addPost(post, userID)
+	postID, err := addPost(post, userID)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to save post to database")
 		http.Error(w, "Failed to save article", http.StatusInternalServerError)
 		return
 	}
+
+	log = log.With().Int("postID", postID).Logger()
 
 	// Return updated posts list
-	writePostsListResponse(userID, w)
+	err = writeUserPosts(userID, w, log)
+	if err != nil {
+		http.Error(w, "Failed to get updated posts list", http.StatusInternalServerError)
+	} else {
+		log.Info().Msg("Success")
+	}
 }
 
 func deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIdFromRequest(r)
 	queryParams := r.URL.Query()
 	postIDStr := queryParams.Get("id")
+
+	log := log.With().Str("endpoint", "/deletePost").Int("userID", userID).Logger()
+
 	if postIDStr == "" {
+		log.Warn().Msg("No ID provided")
 		http.Error(w, "Post ID is required", http.StatusBadRequest)
 		return
 	}
 
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
+		log.Warn().Err(err).Msg("Post ID was not integer")
 		http.Error(w, "Post ID must be an integer", http.StatusBadRequest)
 		return
 	}
 
+	log = log.With().Int("postID", postID).Logger()
+
 	err = deletePost(userID, postID)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to delete post from database")
 		writeErrorResponse(err, w)
 		return
 	}
 
-	// Get the new list of posts and return that as JSON.
-	// TODO: extract this out
-	writePostsListResponse(userID, w)
+	// Write updated posts list to response
+	err = writeUserPosts(userID, w, log)
+	if err != nil {
+		http.Error(w, "Failed to get user posts", http.StatusInternalServerError)
+	} else {
+		log.Info().Msg("Success")
+	}
 }
 
 func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	var user User
 
+	log := log.With().Str("endpoint", "/createUser").Logger()
+
 	// Decode the incoming User json
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to decode user from request body")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	log = log.With().Str("email", user.Email).Logger()
+
 	// Check if email is valid
 	_, err = mail.ParseAddress(user.Email)
 	if err != nil {
+		log.Error().Msg("Failed to parse email")
 		http.Error(w, "Invalid email", http.StatusBadRequest)
 		return
 	}
 
 	// Check if the user already exists
-	emailTaken := checkEmailIsUsed(user.Email)
-	if emailTaken {
-		http.Error(w, "Email already taken", http.StatusBadRequest)
-		return
+	_, err = getIDIfUserExists(user.Email)
+	if err != sql.ErrNoRows {
+		if err == nil {
+			// User with that email exists
+			log.Warn().Msg("Email already taken")
+			http.Error(w, "Email already taken", http.StatusBadRequest)
+			return
+		} else {
+			// Some other error was encountered
+			log.Error().Err(err).Msg("Failed to check if email is taken")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Hash the password using bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.MinCost)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to hash password")
 		http.Error(w, "Registration failed", http.StatusInternalServerError)
 		return
 	}
 
 	// Insert the user into the database.
-	_, err = addUser.Exec(user.Email, hashedPassword)
+	userID, err := addUser(user, hashedPassword)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to add user to databse")
 		http.Error(w, "Registration failed", http.StatusInternalServerError)
 		return
 	}
 
-	// Return auth token, don't write posts list in response since a new user won't have any,
-	// that's used when signing in
-	authorizeThenWriteTokenAndPostsList(w, user, false)
+	log = log.With().Int("userID", userID).Logger()
+
+	err = generateAndSetAuthToken(w, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to authenticate after creating user")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+
+	log.Info().Msg("Success")
 }
 
 func signinHandler(w http.ResponseWriter, r *http.Request) {
-
 	var user User
 
-	// Decode the incoming User json
+	log := log.With().Str("endpoint", "/signin").Logger()
+
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to decode user from request body")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if !checkEmailIsUsed(user.Email) {
-		http.Error(w, "Account not found", http.StatusBadRequest)
+	log = log.With().Str("email", user.Email).Logger()
+
+	userID, err := getIDIfUserExists(user.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Warn().Err(err).Msg("User with provided email not found")
+			http.Error(w, "Account not found", http.StatusBadRequest)
+			return
+		} else {
+			log.Error().Err(err).Msg("Failed to get user by email")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	log = log.With().Int("userID", userID).Logger()
+	err = generateAndSetAuthToken(w, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to authenticate after creating user")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	authorizeThenWriteTokenAndPostsList(w, user, true)
+	err = writeUserPosts(userID, w, log)
+	if err != nil {
+		http.Error(w, "Failed to get user posts", http.StatusInternalServerError)
+	} else {
+		log.Info().Msg("Success")
+	}
 }
 
 func signoutHandler(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIdFromRequest(r)
+	log := log.With().Str("endpoint", "/signout").Int("userID", userID).Logger()
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    "",
@@ -227,6 +328,7 @@ func signoutHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 	})
 	w.WriteHeader(http.StatusOK)
+	log.Info().Msg("Success")
 }
 
 type PostUpdate struct {
@@ -238,28 +340,36 @@ type PostUpdate struct {
 func updatePostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIdFromRequest(r)
 
-	var postData PostUpdate
-	err := json.NewDecoder(r.Body).Decode(&postData)
+	log := log.With().Str("endpoint", "/updatePostStatus").Int("userID", userID).Logger()
+
+	var postUpdateData PostUpdate
+	err := json.NewDecoder(r.Body).Decode(&postUpdateData)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to decode post from request body")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	log = log.With().Int("postID", postUpdateData.Id).Logger()
+
 	// Invalid state: post can't be liked but not read.
-	if postData.Liked && !postData.Read {
+	if postUpdateData.Liked && !postUpdateData.Read {
+		log.Error().Msg("Tried to mark post with illegal state")
 		http.Error(w, "Can't mark post as liked but not read", http.StatusBadRequest)
 		return
 	}
 
-	err = updatePostStatus(userID, postData.Id, postData.Read, postData.Liked)
+	err = updatePostStatus(userID, postUpdateData.Id, postUpdateData.Read, postUpdateData.Liked)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to update post status in database")
 		writeErrorResponse(err, w)
 		return
 	}
 
-	// Return the update post
-	post, err := getPost(userID, postData.Id)
+	// Return the updated post
+	post, err := getPost(userID, postUpdateData.Id)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to get updated post from database")
 		writeErrorResponse(err, w)
 		return
 	}
@@ -267,12 +377,18 @@ func updatePostStatusHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(post)
+
+	log.Info().Msg("Sucess")
 }
 
 func fetchPageHandler(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.Query().Get("url")
+	userID := getUserIdFromRequest(r)
+
+	log := log.With().Str("endpoint", "/fetchPage").Int("userID", userID).Str("url", url).Logger()
 
 	if url == "" {
+		log.Error().Msg("URL missing")
 		http.Error(w, "Missing URL", http.StatusBadRequest)
 		return
 	}
@@ -280,6 +396,7 @@ func fetchPageHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get(url)
 
 	if err != nil {
+		log.Warn().Err(err).Msg("Failed to fetch page from URL")
 		http.Error(w, fmt.Sprintf("Failed to fetch %s: %v", url, err), http.StatusInternalServerError)
 		return
 	}
@@ -287,10 +404,13 @@ func fetchPageHandler(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to page fetch read response body")
 		http.Error(w, fmt.Sprintf("Failed to read response body: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(bodyBytes)
+
+	log.Info().Msg("Success")
 }

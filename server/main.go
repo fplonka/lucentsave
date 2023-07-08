@@ -2,29 +2,29 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	_ "github.com/lib/pq" // Postgres driver
+	"gopkg.in/natefinch/lumberjack.v2"
 
 	"github.com/rs/cors"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
-	_, _ = un, trace
-
 	var err error
 	db, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 
 	err = prepareStatements()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 
 	mux := http.NewServeMux()
@@ -38,13 +38,29 @@ func main() {
 		AllowCredentials: true,
 	}).Handler(mux)
 
-	log.Fatal(http.ListenAndServe("localhost:8080", logRequest(handler)))
+	// Logging config
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	if os.Getenv("ENV") == "production" {
+		logWriter := &lumberjack.Logger{
+			Filename:   "log.txt",
+			MaxSize:    100, // megabytes after which a new file is created
+			MaxBackups: 2,   // number of backups
+			MaxAge:     28,  // days
+			Compress:   false,
+		}
+		defer logWriter.Close()
+		log.Logger = zerolog.New(logWriter).With().Timestamp().Logger()
+
+	} else {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	}
+
+	log.Fatal().Err(http.ListenAndServe("localhost:8080", logRequest(handler)))
 }
 
 func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r)
-		fmt.Println()
+
 		//time.Sleep(time.Second * 3)
 		next.ServeHTTP(w, r)
 	})
