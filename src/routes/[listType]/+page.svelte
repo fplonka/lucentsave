@@ -73,18 +73,19 @@
 				let contentDoc = parser.parseFromString(article.content, 'text/html');
 
 				// Convert relative image URLs to absolute
-				// TODO: do this for links in general?
 				let imgs = contentDoc.getElementsByTagName('img');
 				for (let img of imgs) {
-					let urlObject = new URL(img.src);
-					let postUrlObject = new URL(urlToSave);
+					let urlObject = new URL(img.src, urlToSave);
+					img.src = urlObject.href;
+				}
 
-					// Check if the image source has the localhost origin
-					if (urlObject.origin == PUBLIC_APPLICATION_URL) {
-						// TODO: adjust when deployed
-
-						// Replace the origin in the image source with the origin of the post URL
-						img.src = postUrlObject.origin + urlObject.pathname + urlObject.search + urlObject.hash;
+				// Convert relative URLs in anchor tags to absolute
+				let links = contentDoc.getElementsByTagName('a');
+				for (let link of links) {
+					if (!link.href.startsWith('#')) {
+						// skip navigation links
+						let urlObject = new URL(link.href, urlToSave);
+						link.href = urlObject.href;
 					}
 				}
 

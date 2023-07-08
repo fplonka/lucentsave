@@ -88,17 +88,21 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIdFromRequest(r)
 
 	var post Post
+	fmt.Println("Creating post from body: ", r.Body)
 
 	// TODO: method types everywhere...
 
 	// Decode the incoming Post json
 	err := json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
+		fmt.Println(err.Error())
 		writeErrorResponse(err, w)
 		return
 	}
 
-	maxLen := 50000
+	fmt.Println("Creating post:", post)
+
+	maxLen := 200000
 	if len(post.Title)+len(post.Body)+len(post.URL) > maxLen {
 		http.Error(w, "Post too long to article", http.StatusInternalServerError)
 		return
@@ -215,14 +219,16 @@ func signoutHandler(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1, // Delete cookie immediately
 		HttpOnly: true,
 		Secure:   os.Getenv("ENV") == "production",
+		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:   "loggedIn",
-		Value:  "",
-		MaxAge: -1,
-		Secure: os.Getenv("ENV") == "production",
-		Path:   "/",
+		Name:     "loggedIn",
+		Value:    "",
+		MaxAge:   -1,
+		Secure:   os.Getenv("ENV") == "production",
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
 	})
 	w.WriteHeader(http.StatusOK)
 }

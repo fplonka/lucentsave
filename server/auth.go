@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -29,6 +30,8 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 		return
 	}
 
+	fmt.Println("set auth:", tokenString)
+
 	// Set the new token as a cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
@@ -36,14 +39,15 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) {
 		Expires:  expirationTime,
 		HttpOnly: true,
 		Secure:   os.Getenv("ENV") == "production",
+		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "loggedIn",
 		Value:    "true",
 		Expires:  expirationTime,
-		SameSite: http.SameSiteNoneMode,
 		Secure:   os.Getenv("ENV") == "production",
+		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	})
 }
