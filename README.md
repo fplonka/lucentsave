@@ -1,38 +1,46 @@
-# create-svelte
+# Lucentsave
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+Lucentsavel is a simple website for saving and organizing the things you want to read. It's a lot like [Pocket](https://getpocket.com) or [Instapaper](http://instapaper.com), except **faster**, **cleaner**, and **completely free**.
 
-## Creating a project
+Try it now at [lucentsave.com](https://lucentsave.com).
 
-If you're seeing this, you've probably already done this step. Congrats!
+<!-- ![image](https://github.com/fplonka/lucentsave/assets/92261790/d4a898cc-e4ad-4ed8-aba2-21e1977c4453) -->
+![image](https://github.com/fplonka/lucentsave/assets/92261790/fa877afd-1d96-4804-81ed-525cd2089d94)
+![image](https://github.com/fplonka/lucentsave/assets/92261790/c8a87e5d-565d-487d-9b9b-cc8766f048aa)
 
+
+## Features Coming Soon
+- Browser plugins to quickly save the current page
+- Saving highlights in text
+- Saving and viewing PDF files
+
+## About this project
+
+This project was built with [SvelteKit](https://kit.svelte.dev), [Go](https://go.dev) and [Postgres](https://www.postgresql.org).
+
+To clone the repo, run:
 ```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
+git clone https://github.com/fplonka/lucentsave.git
 ```
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
+To run the backend:
 ```bash
+cd server/
+go run .
+```
+
+To run the frontend:
+```bash
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
-
-## Building
-
-To create a production version of your app:
-
+Or to run a production server:
 ```bash
-npm run build
+npm run build && npm run start
 ```
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+Before the project can be run, you will want to create a `.env` file in the projet root directory where you specify where the application is running. If running with `npm run dev`, you would create a `.env` file with the following content:
+```conf
+PUBLIC_BACKEND_API_URL=http://localhost:8080/api/
+PUBLIC_APPLICATION_URL=http://localhost:5173
+```
