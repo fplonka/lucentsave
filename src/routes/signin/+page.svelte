@@ -88,3 +88,7 @@
 		>
 	</p>
 </div>
+
+<svelte:head>
+	<title>Sign In - Lucentsave</title>
+</svelte:head>

@@ -109,3 +109,7 @@
 		>
 	</p>
 </div>
+
+<svelte:head>
+	<title>Register - Lucentsave</title>
+</svelte:head>

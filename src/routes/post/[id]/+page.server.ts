@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 	})
 	if (response.ok) {
 		const post: Post = await response.json()
-		return { post }
+		return { post, meta: {title: post.title} }
 	}
 
 	throw redirect(307, '/saved')

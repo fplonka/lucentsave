@@ -50,3 +50,7 @@
 		{/if}
 	{/each}
 </div>
+
+<svelte:head>
+	<title>Search - Lucentsave</title>
+</svelte:head>

@@ -1,10 +1,15 @@
 - animations when changing post status from posts list
 - icons
 
-- website title in the tab bar
-
 figure out centos go install, try 1.20 profile optimized compilation
 
-hook for logging out if loggenin cookie not set??
+fix searching (doesn't use post bodies, need backend request?)
+tab title
+README
+plugins
+saving PDFs, or at least viewing?
+a11y warnings
 
-!!: long links make text area wider than screen width, see secret governments acx post on mobile
+renamed /post/1 to /saved/1 ?
+
+hook for logging out if loggenin cookie not set??

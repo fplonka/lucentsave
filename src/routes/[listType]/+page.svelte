@@ -12,6 +12,7 @@
 	import { postsLoaded } from '../../stores';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
+	import { capitalizeFirstLetter } from '$lib/capitalize';
 
 	// export let data: PageData;
 
@@ -218,3 +219,7 @@
 {#if filteredPosts.length == 0}
 	<div class="mt-4 italic">Nothing {$page.url.pathname.substring(1)} yet...</div>
 {/if}
+
+<svelte:head>
+	<title>{capitalizeFirstLetter($page.url.pathname.substring(1))} - Lucentsave</title>
+</svelte:head>

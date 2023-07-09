@@ -126,3 +126,11 @@
 		</span>
 	</div>
 </div>
+
+<div>
+	{data.meta.title}
+</div>
+
+<svelte:head>
+	<title>{data.meta.title}</title>
+</svelte:head>
