@@ -1,6 +1,6 @@
 # Lucentsave
 
-Lucentsavel is a simple website for saving and organizing the things you want to read. It's a lot like [Pocket](https://getpocket.com) or [Instapaper](http://instapaper.com), except **faster**, **cleaner**, and **completely free**.
+Lucentsave is a simple website for saving and organizing the things you want to read. It's a lot like [Pocket](https://getpocket.com) or [Instapaper](http://instapaper.com), except **faster**, **cleaner**, and **completely free**.
 
 Try it now at [lucentsave.com](https://lucentsave.com).
 
@@ -14,7 +14,7 @@ Try it now at [lucentsave.com](https://lucentsave.com).
 - Saving highlights in text
 - Saving and viewing PDF files
 
-## About this project
+## Building
 
 This project was built with [SvelteKit](https://kit.svelte.dev), [Go](https://go.dev) and [Postgres](https://www.postgresql.org).
 
