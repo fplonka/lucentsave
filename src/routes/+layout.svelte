@@ -100,7 +100,3 @@
 		<slot />
 	</div>
 </div>
-
-<svelte:head>
-	<title>Lucentsave</title>
-</svelte:head>

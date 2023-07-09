@@ -132,5 +132,5 @@
 </div>
 
 <svelte:head>
-	<title>{data.meta.title}</title>
+	<title>{post.title} - Lucentsave</title>
 </svelte:head>

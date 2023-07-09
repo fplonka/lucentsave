@@ -3,18 +3,26 @@
 	import type { PageData } from './$types';
 	import type { Post } from '../[listType]/+page.server';
 	import { posts } from '../../stores';
+	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
 
 	// export let data: PageData;
 
 	let query: string = '';
-	$: queryLower = query.toLowerCase();
-	$: searchResultPosts = $posts
-		.filter((p: Post) => [p.title, p.body, p.url].join(' ').toLowerCase().includes(queryLower))
-		.sort(
-			(a: Post, b: Post) =>
-				[b.title, b.body, b.url].join(' ').toLowerCase().split(queryLower).length -
-				[a.title, a.body, a.url].join(' ').toLowerCase().split(queryLower).length
-		);
+	let searchResultPosts: Post[] = [...$posts];
+	// $: queryLower = query.toLowerCase();
+	// $: searchResultPosts = $posts
+	// 	.filter((p: Post) => [p.title, p.body, p.url].join(' ').toLowerCase().includes(queryLower))
+	// 	.sort(
+	// 		(a: Post, b: Post) =>
+	// 			[b.title, b.body, b.url].join(' ').toLowerCase().split(queryLower).length -
+	// 			[a.title, a.body, a.url].join(' ').toLowerCase().split(queryLower).length
+	// 	);
+
+	$: {
+		if (query == '') {
+			searchResultPosts = [...$posts];
+		}
+	}
 
 	const getHostname = (url: string) => {
 		try {
@@ -23,19 +31,39 @@
 			return 'Invalid URL';
 		}
 	};
+
+	const searchPosts = async (): Promise<void> => {
+		const response = await fetch(PUBLIC_BACKEND_API_URL + `searchPosts?query=${query}`, {
+			method: 'GET',
+			credentials: 'include'
+		});
+		if (response.ok) {
+			searchResultPosts = await response.json();
+		} else {
+			// TODO: error text?
+		}
+	};
 </script>
 
-<div class="mt-5 flex items-center space-x-2">
+<form on:submit|preventDefault={searchPosts} class="mt-5 flex items-center space-x-2">
 	<input
 		tabindex="1"
 		type="text"
-		id="query"
+		id="url"
 		bind:value={query}
 		required
 		class="w-full py-1 px-2 border-2 border-black"
-		placeholder="Enter search term here..."
+		placeholder="Enter term to search here..."
 	/>
-</div>
+	<input
+		type="submit"
+		value="Search"
+		class="py-1 px-2 border-2 border-black {query !== ''
+			? 'bg-black text-white hover:bg-gray-700 cursor-pointer'
+			: 'bg-gray-700 text-white cursor-not-allowed'}"
+		disabled={query === ''}
+	/>
+</form>
 
 <div class="mt-4">
 	{#each searchResultPosts as post (post.id)}

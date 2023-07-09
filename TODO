@@ -3,12 +3,11 @@
 
 figure out centos go install, try 1.20 profile optimized compilation
 
-fix searching (doesn't use post bodies, need backend request?)
-tab title
 README
-plugins
+browser plugins
 saving PDFs, or at least viewing?
 a11y warnings
+log DB calls, to optimize indices later
 
 renamed /post/1 to /saved/1 ?
 

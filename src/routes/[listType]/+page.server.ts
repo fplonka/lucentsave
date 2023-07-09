@@ -39,7 +39,7 @@ export interface Post {
 // 	return { posts: empty }
 // }
 
-export const load = ({ cookies }) => {
+export const load: PageServerLoad = ({ cookies }) => {
 	if (cookies.get('loggedIn') !== 'true') {
 		throw redirect(307, '/signin')
 	}

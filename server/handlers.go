@@ -28,6 +28,7 @@ func addHandleFuncs(mux *http.ServeMux) {
 	mux.HandleFunc("/api/signout", authMiddleware(signoutHandler))
 	mux.HandleFunc("/api/signin", signinHandler)
 	mux.HandleFunc("/api/fetchPage", authMiddleware(fetchPageHandler))
+	mux.HandleFunc("/api/searchPosts", authMiddleware(searchPostsHandler))
 }
 
 func writeErrorResponse(err error, w http.ResponseWriter) {
@@ -292,10 +293,23 @@ func signinHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log = log.With().Int("userID", userID).Logger()
+
+	hashedPassword, err := getUserHashedPassword(user.Email)
+	if err != nil {
+		log.Error().Err(err).Msg("Account not found after being found in previous check")
+		http.Error(w, "Account not found", http.StatusUnauthorized)
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(user.Password)); err != nil {
+		log.Warn().Err(err).Msg("Incorrect password")
+		http.Error(w, "Incorrect password", http.StatusUnauthorized)
+		return
+	}
+
 	err = generateAndSetAuthToken(w, userID)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to authenticate after creating user")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Error().Err(err).Msg("Failed to set token")
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 
@@ -411,6 +425,34 @@ func fetchPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(bodyBytes)
+
+	log.Info().Msg("Success")
+}
+func searchPostsHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("query")
+	userID := getUserIdFromRequest(r)
+
+	log := log.With().Str("endpoint", "/searchPosts").Int("userID", userID).Str("query", query).Logger()
+
+	if query == "" {
+		log.Warn().Msg("Searching with empty query")
+		getPostHandler(w, r)
+		return
+	}
+
+	searchResultPosts, err := getPostsBySearchInBody(query, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to search in posts")
+		http.Error(w, "Search failed", http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(searchResultPosts)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to encode posts")
+		http.Error(w, "Search failed", http.StatusInternalServerError)
+		return
+	}
 
 	log.Info().Msg("Success")
 }
