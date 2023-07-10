@@ -127,10 +127,6 @@
 	</div>
 </div>
 
-<div>
-	{data.meta.title}
-</div>
-
 <svelte:head>
 	<title>{post.title} - Lucentsave</title>
 </svelte:head>

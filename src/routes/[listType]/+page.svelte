@@ -42,93 +42,22 @@
 	let isSaving = false;
 	let savingText = waitingText;
 
-	async function fetchAndParseURL(event: Event) {
+	async function savePostFromURL(event: Event) {
 		isSaving = true;
 		let urlToSave = url;
 		url = '';
-
 		event.preventDefault();
 
-		const response = await fetch(
-			PUBLIC_BACKEND_API_URL + `fetchPage?url=${encodeURIComponent(urlToSave)}`,
-			{
-				credentials: 'include'
-			}
-		);
-		if (!response.ok) {
-			savingText = 'Failed to load page';
-			return;
-		}
-		const html = await response.text();
-
-		const parser = new DOMParser();
-		let doc = parser.parseFromString(html, 'text/html');
-
-		if (isProbablyReaderable(doc)) {
-			let reader = new Readability(doc);
-			let article = reader.parse();
-			if (article != null) {
-				title = article.title;
-
-				// Parse the content as a Document again to be able to manipulate it
-				let contentDoc = parser.parseFromString(article.content, 'text/html');
-
-				// Convert relative image URLs to absolute
-				// TODO: do this for links in general?
-				let imgs = contentDoc.getElementsByTagName('img');
-				for (let img of imgs) {
-					let urlObject = new URL(img.src);
-					let postUrlObject = new URL(urlToSave);
-
-					if (urlObject.origin == PUBLIC_APPLICATION_URL) {
-						img.src = postUrlObject.origin + urlObject.pathname + urlObject.search + urlObject.hash;
-					}
-				}
-
-				let links = contentDoc.getElementsByTagName('a');
-				for (let link of links) {
-					let urlObject = new URL(link.href);
-					let postUrlObject = new URL(urlToSave);
-
-					if (link.href.startsWith(PUBLIC_APPLICATION_URL + '/saved#')) {
-						// Skip navigation link
-						continue;
-					}
-					if (urlObject.origin == PUBLIC_APPLICATION_URL) {
-						link.href =
-							postUrlObject.origin + urlObject.pathname + urlObject.search + urlObject.hash;
-					}
-				}
-
-				body = contentDoc.body.innerHTML;
-
-				// console.log('title is: ', title);
-				// console.log('body is: ', body);
-				await sendPost(urlToSave);
-			} else {
-				savingText = 'Failed to parse article';
-			}
-		} else {
-			savingText = 'Failed to parse article';
-		}
-	}
-
-	const sendPost = async (url: string): Promise<void> => {
-		const response = await fetch(PUBLIC_BACKEND_API_URL + 'createPost', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ url, title, body }),
+		const response = await fetch(PUBLIC_BACKEND_API_URL + `createPostFromURL?url=${urlToSave}`, {
 			credentials: 'include'
 		});
-		if (response.ok) {
+		if (!response.ok) {
+			savingText = await response.text();
+		} else {
 			posts.set(await response.json());
 			isSaving = false;
-		} else {
-			savingText = await response.text();
 		}
-	};
+	}
 
 	const updatePost = async (post: Post) => {
 		const postIndex = $posts.findIndex((p) => p.id === post.id);
@@ -160,7 +89,7 @@
 </script>
 
 {#if $page.url.pathname.startsWith('/saved')}
-	<form on:submit={fetchAndParseURL} class="mt-5 flex items-center space-x-2">
+	<form on:submit={savePostFromURL} class="mt-5 flex items-center space-x-2">
 		<input
 			tabindex="1"
 			type="text"

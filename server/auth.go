@@ -16,6 +16,7 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+// We take in a sameSite setting so that we can set SameSite: None for the cookie used by browser extensions
 func generateAndSetAuthToken(w http.ResponseWriter, userID int) error {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
@@ -35,7 +36,7 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) error {
 		Expires:  expirationTime,
 		HttpOnly: true,
 		Secure:   os.Getenv("ENV") == "production",
-		SameSite: http.SameSiteLaxMode,
+		SameSite: DEFAULT_SAME_SITE_MODE,
 		Path:     "/",
 	})
 	http.SetCookie(w, &http.Cookie{
@@ -43,7 +44,7 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) error {
 		Value:    "true",
 		Expires:  expirationTime,
 		Secure:   os.Getenv("ENV") == "production",
-		SameSite: http.SameSiteLaxMode,
+		SameSite: DEFAULT_SAME_SITE_MODE,
 		Path:     "/",
 	})
 
@@ -85,7 +86,7 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 			log.Error().Err(err).Msg("Failed to parse token string")
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		if !tkn.Valid {
@@ -95,7 +96,11 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// JWT is valid so we refresh it
-		generateAndSetAuthToken(w, claims.UserID)
+		err = generateAndSetAuthToken(w, claims.UserID)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to generate and set auth token")
+			w.WriteHeader(http.StatusUnauthorized)
+		}
 
 		// We add the user ID to the context
 		ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)

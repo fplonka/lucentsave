@@ -9,11 +9,14 @@ import (
 	"net/mail"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/sym01/htmlsanitizer"
 	"golang.org/x/crypto/bcrypt"
+
+	readability "github.com/go-shiori/go-readability"
 )
 
 // TODO: method types everywhere...
@@ -21,7 +24,7 @@ func addHandleFuncs(mux *http.ServeMux) {
 	// TODO: middlewhere for checking post owner id == user id ??
 	mux.HandleFunc("/api/getAllUserPosts", authMiddleware(getSavedPostsHandler))
 	mux.HandleFunc("/api/getPost", authMiddleware(getPostHandler))
-	mux.HandleFunc("/api/createPost", authMiddleware(createPostHandler))
+	mux.HandleFunc("/api/createPostFromURL", authMiddleware(createPostFromURLHandler))
 	mux.HandleFunc("/api/deletePost", authMiddleware(deletePostHandler))
 	mux.HandleFunc("/api/updatePostStatus", authMiddleware(updatePostStatusHandler))
 	mux.HandleFunc("/api/createUser", createUserHandler)
@@ -60,6 +63,10 @@ func writeUserPosts(userID int, w http.ResponseWriter, log zerolog.Logger) error
 	}
 	return nil
 }
+
+const (
+	DEFAULT_SAME_SITE_MODE = http.SameSiteLaxMode
+)
 
 // Gets all posts for a given user, regardless of whether they're read or liked
 // NOTE: this doesn't return the post bodies! just the "metadata"
@@ -111,39 +118,42 @@ func getPostHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Success")
 }
 
-func createPostHandler(w http.ResponseWriter, r *http.Request) {
+func createPostFromURLHandler(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIdFromRequest(r)
+	url := r.URL.Query().Get("url")
+	log := log.With().Str("endpoint", "/createPostFromURL").Int("userID", userID).Str("url", url).Logger()
 
-	log := log.With().Str("endpoint", "/createPost").Int("userID", userID).Logger()
-
-	var post Post
-
-	// Decode the incoming Post json
-	err := json.NewDecoder(r.Body).Decode(&post)
+	article, err := readability.FromURL(url, 10*time.Second)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to decode post from request body")
-		writeErrorResponse(err, w)
+		log.Error().Err(err).Msg("Failed to save article from URL")
+		http.Error(w, "Failed to save page", http.StatusBadRequest)
+		return
+	}
+
+	if article.Title == "" || article.Content == "" {
+		log.Warn().Msg("Article title or content was empty after parsing")
+		http.Error(w, "Failed to save page", http.StatusBadRequest)
+		return
+	}
+
+	article.Content, err = htmlsanitizer.SanitizeString(article.Content)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to sanitize post body")
+		http.Error(w, "Failed to save page", http.StatusInternalServerError)
 		return
 	}
 
 	maxLen := 200000
-	if len(post.Title)+len(post.Body)+len(post.URL) > maxLen {
-		log.Warn().Str("url", post.URL).Msg("Post too long to save")
+	if len(url)+len(article.Title)+len(article.Content) > maxLen {
+		log.Warn().Msg("Post too long to save")
 		http.Error(w, "Article too long to save", http.StatusInternalServerError)
 		return
 	}
 
-	post.Body, err = htmlsanitizer.SanitizeString(post.Body)
-	if err != nil {
-		log.Error().Str("url", post.URL).Err(err).Msg("Failed to sanitize post body")
-		http.Error(w, "Failed to save article", http.StatusInternalServerError)
-		return
-	}
-
-	postID, err := addPost(post, userID)
+	postID, err := addPost(Post{Title: article.Title, Body: article.Content, URL: url}, userID)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to save post to database")
-		http.Error(w, "Failed to save article", http.StatusInternalServerError)
+		http.Error(w, "Failed to save page", http.StatusInternalServerError)
 		return
 	}
 
@@ -266,6 +276,7 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signinHandler(w http.ResponseWriter, r *http.Request) {
+
 	var user User
 
 	log := log.With().Str("endpoint", "/signin").Logger()
@@ -330,7 +341,7 @@ func signoutHandler(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1, // Delete cookie immediately
 		HttpOnly: true,
 		Secure:   os.Getenv("ENV") == "production",
-		SameSite: http.SameSiteLaxMode,
+		SameSite: DEFAULT_SAME_SITE_MODE,
 		Path:     "/",
 	})
 	http.SetCookie(w, &http.Cookie{
@@ -338,7 +349,7 @@ func signoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		MaxAge:   -1,
 		Secure:   os.Getenv("ENV") == "production",
-		SameSite: http.SameSiteLaxMode,
+		SameSite: DEFAULT_SAME_SITE_MODE,
 		Path:     "/",
 	})
 	w.WriteHeader(http.StatusOK)

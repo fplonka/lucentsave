@@ -3,12 +3,10 @@
 
 figure out centos go install, try 1.20 profile optimized compilation
 
-README
 browser plugins
 saving PDFs, or at least viewing?
 a11y warnings
-log DB calls, to optimize indices later
+
+liked icon in search results?
 
 renamed /post/1 to /saved/1 ?
-
-hook for logging out if loggenin cookie not set??
