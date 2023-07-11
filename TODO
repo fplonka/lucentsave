@@ -8,8 +8,17 @@ saving PDFs, or at least viewing?
 a11y warnings
 
 liked icon in search results?
+
 normalise relevancy by text length when searching?
 
 SEO data: page description, other stuff probably
 
+alignemnt of search/signout menu text
+
+italics angle
+
+consistent db query for getting post: id or id + user id?
+
 renamed /post/1 to /saved/1 ?
+
+span styling: typography adding space? breaks table layouts and moves thing very slightly

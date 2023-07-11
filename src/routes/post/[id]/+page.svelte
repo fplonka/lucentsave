@@ -4,6 +4,7 @@
 	import { page } from '$app/stores';
 	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
 	import { like, markAsRead } from '$lib/postActions';
+	import { onMount } from 'svelte';
 	import { posts } from '../../../stores';
 	import type { Post } from '../../[listType]/+page.server';
 	import type { PageData } from './$types';
@@ -11,26 +12,6 @@
 	export let data: PageData;
 
 	let post = data.post;
-
-	let deleteState = 'Delete';
-	let deleteTimeout: NodeJS.Timeout;
-
-	const initiateDelete = (postID: number) => {
-		if (deleteState === 'Delete') {
-			deleteState = 'Sure?';
-			deleteTimeout = setTimeout(() => {
-				deleteState = 'Delete';
-			}, 3000); // Revert back to 'Delete' after 3 seconds
-		} else if (deleteState === 'Sure?') {
-			clearTimeout(deleteTimeout);
-			deleteState = 'Delete';
-			deletePost(postID);
-		}
-	};
-
-	const reset = () => {
-		deleteState = 'Delete';
-	};
 
 	const deletePost = async (postID: number): Promise<void> => {
 		const response = await await fetch(PUBLIC_BACKEND_API_URL + `deletePost?id=${postID}`, {
@@ -43,11 +24,106 @@
 			goto('/saved');
 		}
 	};
+
+	let selected = '';
+	onMount(() => {
+		document.addEventListener('mouseup', async () => {
+			const userSelection = window.getSelection();
+			if (userSelection && userSelection.rangeCount > 0) {
+				highlightRange(userSelection.getRangeAt(0));
+			}
+			document.getSelection()?.empty();
+
+			// Save highlighted post body
+			await fetch(PUBLIC_BACKEND_API_URL + `updatePostBody`, {
+				method: 'PUT',
+				credentials: 'include',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ id: post.id, body: document.getElementById('postbody')?.innerHTML! })
+			});
+		});
+	});
+
+	function isNodeInRange(range: Range, node: Node): boolean {
+		const nodeRange = document.createRange();
+		nodeRange.selectNode(node);
+
+		const START_TO_START = 0;
+		const END_TO_END = 2;
+
+		return (
+			range.compareBoundaryPoints(START_TO_START, nodeRange) <= 0 &&
+			range.compareBoundaryPoints(END_TO_END, nodeRange) >= 0
+		);
+	}
+
+	function getCompletelyHighlightedNodes(range: Range): Node[] {
+		const iter = document.createNodeIterator(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
+		let currentNode = iter.nextNode();
+
+		let res: Node[] = [];
+
+		while (currentNode) {
+			if (range.intersectsNode(currentNode) && isNodeInRange(range, currentNode)) {
+				console.log(currentNode.textContent);
+				res.push(currentNode);
+			}
+			currentNode = iter.nextNode();
+		}
+
+		console.log('\n');
+		return res;
+	}
+
+	function getEdgeHighlightedNodes(range: Range): Node[] {
+		const { startContainer, startOffset, endContainer, endOffset } = range;
+		let edgeNodes: Node[] = [];
+
+		if (startContainer === endContainer && startContainer.nodeType === Node.TEXT_NODE) {
+			(startContainer as Text).splitText(endOffset);
+			let newStartNode = (startContainer as Text).splitText(startOffset);
+			edgeNodes.push(newStartNode);
+		} else {
+			if (startContainer.nodeType === Node.TEXT_NODE) {
+				let newStartNode = (startContainer as Text).splitText(startOffset);
+				edgeNodes.push(newStartNode);
+			}
+
+			if (endContainer.nodeType === Node.TEXT_NODE) {
+				(endContainer as Text).splitText(endOffset);
+				edgeNodes.push(endContainer);
+			}
+		}
+
+		return edgeNodes;
+	}
+
+	function highlightNode(node: Node) {
+		const span = document.createElement('span');
+		span.style.backgroundColor = 'yellow';
+		node.parentNode?.replaceChild(span, node);
+		span.appendChild(node);
+	}
+
+	function highlightRange(range: Range) {
+		const completelyHighlighted = getCompletelyHighlightedNodes(range);
+		const edgeHighlighted = getEdgeHighlightedNodes(range);
+
+		for (const node of completelyHighlighted) {
+			highlightNode(node);
+		}
+
+		for (const node of edgeHighlighted) {
+			highlightNode(node);
+		}
+	}
 </script>
 
 <div class="space-y-4 mt-4">
 	<div class="border-b-2 border-dashed border-black overflow-auto break-words">
-		<div on:mouseleave={reset} class="flex justify-between items-center group">
+		<div class="flex justify-between items-center group">
 			<div>
 				<h2 class="text-xl md:text-2xl font-bold text-black">{post.title}</h2>
 				<a href={post.url} class="text-sm text-black block hover:underline hover:text-gray-500"
@@ -66,6 +142,7 @@
 			</span>
 		</div>
 		<div
+			id="postbody"
 			class="prose
 			prose-base md:prose-lg text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
 			prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500
@@ -130,3 +207,7 @@
 <svelte:head>
 	<title>{post.title} - Lucentsave</title>
 </svelte:head>
+
+<div>
+	{selected}
+</div>

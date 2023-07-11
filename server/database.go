@@ -44,6 +44,7 @@ var (
 	addPostStmt               *sql.Stmt
 	deletePostStmt            *sql.Stmt
 	updatePostStatusStmt      *sql.Stmt
+	updatePostBodyStmt        *sql.Stmt
 	getUserIDByEmailStmt      *sql.Stmt
 	getUserHashedPasswordStmt *sql.Stmt
 	addUserStmt               *sql.Stmt
@@ -73,7 +74,11 @@ func prepareStatements() error {
 	if err != nil {
 		return err
 	}
-	updatePostStatusStmt, err = db.Prepare("UPDATE posts SET read = $1, liked = $2 WHERE id = $3 AND user_id = $4")
+	updatePostStatusStmt, err = db.Prepare("UPDATE posts SET read = $1, liked = $2 WHERE id = $3")
+	if err != nil {
+		return err
+	}
+	updatePostBodyStmt, err = db.Prepare("UPDATE posts SET body = $1 WHERE id = $2")
 	if err != nil {
 		return err
 	}
@@ -220,7 +225,24 @@ func updatePostStatus(userID, postID int, read, liked bool) error {
 	}
 
 	log.Info().Int("userID", userID).Int("postID", postID).Str("query", "updatePostStatus").Msg("")
-	_, err = updatePostStatusStmt.Exec(read, liked, postID, userID)
+	_, err = updatePostStatusStmt.Exec(read, liked, postID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updatePostBody(userID, postID int, newBody string) error {
+	log.Info().Int("userID", userID).Int("postID", postID).Str("query", "checkUserIsPostOwner").Msg("")
+	err := checkUserIsPostOwner(userID, postID)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Int("userID", userID).Int("postID", postID).Str("query", "updatePostBody").Msg("")
+	_, err = updatePostBodyStmt.Exec(newBody, postID)
 
 	if err != nil {
 		return err

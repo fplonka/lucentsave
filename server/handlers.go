@@ -27,6 +27,7 @@ func addHandleFuncs(mux *http.ServeMux) {
 	mux.HandleFunc("/api/createPostFromURL", authMiddleware(createPostFromURLHandler))
 	mux.HandleFunc("/api/deletePost", authMiddleware(deletePostHandler))
 	mux.HandleFunc("/api/updatePostStatus", authMiddleware(updatePostStatusHandler))
+	mux.HandleFunc("/api/updatePostBody", authMiddleware(updatePostBodyHandler))
 	mux.HandleFunc("/api/createUser", createUserHandler)
 	mux.HandleFunc("/api/signout", signoutHandler) // temporary no auth middleware??
 	mux.HandleFunc("/api/signin", signinHandler)
@@ -357,9 +358,23 @@ func signoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type PostUpdate struct {
-	Id    int  `json:"id"`
+	ID    int  `json:"id"`
 	Read  bool `json:"read"`
 	Liked bool `json:"liked"`
+}
+
+func writePostBodyResponse(w http.ResponseWriter, userID, postID int) error {
+	post, err := getPost(userID, postID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get updated post from database")
+		writeErrorResponse(err, w)
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(post)
+	return nil
 }
 
 func updatePostStatusHandler(w http.ResponseWriter, r *http.Request) {
@@ -375,7 +390,7 @@ func updatePostStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log = log.With().Int("postID", postUpdateData.Id).Logger()
+	log = log.With().Int("postID", postUpdateData.ID).Logger()
 
 	// Invalid state: post can't be liked but not read.
 	if postUpdateData.Liked && !postUpdateData.Read {
@@ -384,26 +399,62 @@ func updatePostStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = updatePostStatus(userID, postUpdateData.Id, postUpdateData.Read, postUpdateData.Liked)
+	err = updatePostStatus(userID, postUpdateData.ID, postUpdateData.Read, postUpdateData.Liked)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update post status in database")
 		writeErrorResponse(err, w)
 		return
 	}
 
-	// Return the updated post
-	post, err := getPost(userID, postUpdateData.Id)
+	err = writePostBodyResponse(w, userID, postUpdateData.ID)
+	if err == nil {
+		log.Info().Msg("Sucess")
+	}
+
+}
+
+func updatePostBodyHandler(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIdFromRequest(r)
+
+	log := log.With().Str("endpoint", "/updatePostBody").Int("userID", userID).Logger()
+
+	// This only has ID and body set. Potentially should be a different type.
+	var post Post
+	err := json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get updated post from database")
+		log.Error().Err(err).Msg("Failed to decode post from request body")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log = log.With().Int("postID", post.ID).Logger()
+
+	// Sanitize while keeping the highlight span elements
+	s := htmlsanitizer.NewHTMLSanitizer()
+	s.RemoveTag("span")
+	customTag := &htmlsanitizer.Tag{
+		Name: "span",
+		Attr: []string{"style"},
+	}
+	s.AllowList.Tags = append(s.AllowList.Tags, customTag)
+	post.Body, err = s.SanitizeString(post.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to sanitize post body")
+		http.Error(w, "Failed to save highlight", http.StatusInternalServerError)
+		return
+	}
+
+	err = updatePostBody(userID, post.ID, post.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to update post body in database")
 		writeErrorResponse(err, w)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(post)
-
-	log.Info().Msg("Sucess")
+	err = writePostBodyResponse(w, userID, post.ID)
+	if err == nil {
+		log.Info().Msg("Sucess")
+	}
 }
 
 func fetchPageHandler(w http.ResponseWriter, r *http.Request) {

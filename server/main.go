@@ -63,12 +63,12 @@ func main() {
 func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		fmt.Println(*r)
-		//time.Sleep(time.Second * 3)
-		cookies := r.Cookies()
-		for i := 0; i < len(cookies); i++ {
-			fmt.Println(*cookies[i])
-		}
+		// fmt.Println(*r)
+		////time.Sleep(time.Second * 3)
+		//cookies := r.Cookies()
+		//for i := 0; i < len(cookies); i++ {
+		//	fmt.Println(*cookies[i])
+		//}
 		next.ServeHTTP(w, r)
 		fmt.Println()
 	})
