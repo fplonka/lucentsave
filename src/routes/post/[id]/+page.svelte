@@ -8,10 +8,16 @@
 	import { posts } from '../../../stores';
 	import type { Post } from '../../[listType]/+page.server';
 	import type { PageData } from './$types';
+	import { v4 as uuid } from 'uuid';
+	import { getPathTo, highlightRange } from '$lib/highlighting';
 
 	export let data: PageData;
 
 	let post = data.post;
+
+	for (const r of data.highlightRanges) {
+		highlightRange(r.range, r.id);
+	}
 
 	const deletePost = async (postID: number): Promise<void> => {
 		const response = await await fetch(PUBLIC_BACKEND_API_URL + `deletePost?id=${postID}`, {
@@ -30,95 +36,53 @@
 		document.addEventListener('mouseup', async () => {
 			const userSelection = window.getSelection();
 			if (userSelection && userSelection.rangeCount > 0) {
-				highlightRange(userSelection.getRangeAt(0));
-			}
-			document.getSelection()?.empty();
+				let r = userSelection.getRangeAt(0);
 
-			// Save highlighted post body
-			await fetch(PUBLIC_BACKEND_API_URL + `updatePostBody`, {
-				method: 'PUT',
-				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ id: post.id, body: document.getElementById('postbody')?.innerHTML! })
-			});
+				// Create the highlight
+				let highlightID = uuid();
+				highlightRange(r, highlightID);
+				document.getSelection()?.empty();
+
+				// Store the created highlight on the backend
+				await fetch(PUBLIC_BACKEND_API_URL + `createHiglight`, {
+					method: 'PUT',
+					credentials: 'include',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						id: highlightID,
+						postId: post.id,
+						text: userSelection.toString(),
+						startContainerPath: getPathTo(r.startContainer),
+						startOffset: r.startOffset,
+						endContainerPath: getPathTo(r.endContainer),
+						endOffset: r.endOffset
+					})
+				});
+			}
+		});
+
+		document.addEventListener('click', (event) => {
+			const target = event.target as HTMLElement;
+			if (target.dataset.highlightId) {
+				const highlightId = target.dataset.highlightId;
+				// Use highlightId to delete the highlight from backend
+
+				// Remove all spans with this highlight ID
+				const highlights = document.querySelectorAll(`span[data-highlight-id="${highlightId}"]`);
+				highlights.forEach((span) => {
+					const parent = span.parentNode;
+					while (span.firstChild) {
+						parent?.insertBefore(span.firstChild, span);
+					}
+					parent?.removeChild(span);
+				});
+
+				// TODO: remove from backend
+			}
 		});
 	});
-
-	function isNodeInRange(range: Range, node: Node): boolean {
-		const nodeRange = document.createRange();
-		nodeRange.selectNode(node);
-
-		const START_TO_START = 0;
-		const END_TO_END = 2;
-
-		return (
-			range.compareBoundaryPoints(START_TO_START, nodeRange) <= 0 &&
-			range.compareBoundaryPoints(END_TO_END, nodeRange) >= 0
-		);
-	}
-
-	function getCompletelyHighlightedNodes(range: Range): Node[] {
-		const iter = document.createNodeIterator(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
-		let currentNode = iter.nextNode();
-
-		let res: Node[] = [];
-
-		while (currentNode) {
-			if (range.intersectsNode(currentNode) && isNodeInRange(range, currentNode)) {
-				console.log(currentNode.textContent);
-				res.push(currentNode);
-			}
-			currentNode = iter.nextNode();
-		}
-
-		console.log('\n');
-		return res;
-	}
-
-	function getEdgeHighlightedNodes(range: Range): Node[] {
-		const { startContainer, startOffset, endContainer, endOffset } = range;
-		let edgeNodes: Node[] = [];
-
-		if (startContainer === endContainer && startContainer.nodeType === Node.TEXT_NODE) {
-			(startContainer as Text).splitText(endOffset);
-			let newStartNode = (startContainer as Text).splitText(startOffset);
-			edgeNodes.push(newStartNode);
-		} else {
-			if (startContainer.nodeType === Node.TEXT_NODE) {
-				let newStartNode = (startContainer as Text).splitText(startOffset);
-				edgeNodes.push(newStartNode);
-			}
-
-			if (endContainer.nodeType === Node.TEXT_NODE) {
-				(endContainer as Text).splitText(endOffset);
-				edgeNodes.push(endContainer);
-			}
-		}
-
-		return edgeNodes;
-	}
-
-	function highlightNode(node: Node) {
-		const span = document.createElement('span');
-		span.style.backgroundColor = 'yellow';
-		node.parentNode?.replaceChild(span, node);
-		span.appendChild(node);
-	}
-
-	function highlightRange(range: Range) {
-		const completelyHighlighted = getCompletelyHighlightedNodes(range);
-		const edgeHighlighted = getEdgeHighlightedNodes(range);
-
-		for (const node of completelyHighlighted) {
-			highlightNode(node);
-		}
-
-		for (const node of edgeHighlighted) {
-			highlightNode(node);
-		}
-	}
 </script>
 
 <div class="space-y-4 mt-4">

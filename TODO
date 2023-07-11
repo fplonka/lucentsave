@@ -21,4 +21,13 @@ consistent db query for getting post: id or id + user id?
 
 renamed /post/1 to /saved/1 ?
 
-span styling: typography adding space? breaks table layouts and moves thing very slightly
+big refactor: post object should be metadata only and this should be clear. getting the body should just get a string probably
+
+refactor: as convention, in each handler, at the beginning declare the string which will hold the error message to say on
+http.Error(), unless we want to give fine grained detail (rare)
+
+HIGHLIGHTS
+
+- span styling: typography adding space? breaks table layouts and moves thing very slightly
+- prevent overlap
+- button instead of instant on click
