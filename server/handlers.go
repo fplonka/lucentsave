@@ -28,7 +28,7 @@ func addHandleFuncs(mux *http.ServeMux) {
 	mux.HandleFunc("/api/deletePost", authMiddleware(deletePostHandler))
 	mux.HandleFunc("/api/updatePostStatus", authMiddleware(updatePostStatusHandler))
 	mux.HandleFunc("/api/createUser", createUserHandler)
-	mux.HandleFunc("/api/signout", authMiddleware(signoutHandler))
+	mux.HandleFunc("/api/signout", signoutHandler) // temporary no auth middleware??
 	mux.HandleFunc("/api/signin", signinHandler)
 	mux.HandleFunc("/api/fetchPage", authMiddleware(fetchPageHandler))
 	mux.HandleFunc("/api/searchPosts", authMiddleware(searchPostsHandler))
@@ -333,8 +333,8 @@ func signinHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signoutHandler(w http.ResponseWriter, r *http.Request) {
-	userID := getUserIdFromRequest(r)
-	log := log.With().Str("endpoint", "/signout").Int("userID", userID).Logger()
+	// userID := getUserIdFromRequest(r)
+	// log := log.With().Str("endpoint", "/signout").Int("userID", userID).Logger()
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    "",

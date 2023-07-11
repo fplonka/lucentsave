@@ -26,6 +26,14 @@ type User struct {
 	Password string `json:"password"` // TODO: rename this, confusing AF
 }
 
+type Highlight struct {
+	ID       int    `json:"id"`
+	Text     string `json:"text"`
+	StartPos int    `json:"startPos"`
+	EndPos   int    `json:"endPos"`
+	// or: text + occurence no. in html content
+}
+
 var (
 	ErrUnauthorized = errors.New("unauthorized")
 	ErrNotFound     = errors.New("not found")

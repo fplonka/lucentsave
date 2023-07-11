@@ -25,6 +25,16 @@
 				posts.set(await response.json());
 				postsLoaded.set(true);
 				isSignedIn.set(true);
+			} else if (response.status == 401) {
+				// Sign the user out. This is important in the weird edge case where the user has a token they think
+				// is valid but something changed on the backend such that it no longer is.
+				await fetch(PUBLIC_BACKEND_API_URL + 'signout', {
+					method: 'POST',
+					credentials: 'include'
+				});
+				goto('/signin');
+				isSignedIn.set(false);
+				postsLoaded.set(false);
 			}
 		};
 		fetchPosts();
