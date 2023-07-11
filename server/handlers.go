@@ -3,8 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"net/mail"
 	"os"
@@ -28,11 +26,15 @@ func addHandleFuncs(mux *http.ServeMux) {
 	mux.HandleFunc("/api/deletePost", authMiddleware(deletePostHandler))
 	mux.HandleFunc("/api/updatePostStatus", authMiddleware(updatePostStatusHandler))
 	mux.HandleFunc("/api/updatePostBody", authMiddleware(updatePostBodyHandler))
-	mux.HandleFunc("/api/createUser", createUserHandler)
-	mux.HandleFunc("/api/signout", signoutHandler) // temporary no auth middleware??
-	mux.HandleFunc("/api/signin", signinHandler)
-	mux.HandleFunc("/api/fetchPage", authMiddleware(fetchPageHandler))
 	mux.HandleFunc("/api/searchPosts", authMiddleware(searchPostsHandler))
+
+	mux.HandleFunc("/api/createUser", createUserHandler)
+	mux.HandleFunc("/api/signout", signoutHandler)
+	mux.HandleFunc("/api/signin", signinHandler)
+
+	mux.HandleFunc("/api/createHighlight", authMiddleware(createHighlightHandler))
+	mux.HandleFunc("/api/deleteHighlight", authMiddleware(deleteHighlightHanlder))
+	mux.HandleFunc("/api/getAllUserHighlights", authMiddleware(getAllUserHighlightsHandler))
 }
 
 func writeErrorResponse(err error, w http.ResponseWriter) {
@@ -434,7 +436,7 @@ func updatePostBodyHandler(w http.ResponseWriter, r *http.Request) {
 	s.RemoveTag("span")
 	customTag := &htmlsanitizer.Tag{
 		Name: "span",
-		Attr: []string{"style"},
+		Attr: []string{"style", "data-highlight-id"}, // TODO: validation? XSS from having data field settable?
 	}
 	s.AllowList.Tags = append(s.AllowList.Tags, customTag)
 	post.Body, err = s.SanitizeString(post.Body)
@@ -457,39 +459,6 @@ func updatePostBodyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func fetchPageHandler(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.Query().Get("url")
-	userID := getUserIdFromRequest(r)
-
-	log := log.With().Str("endpoint", "/fetchPage").Int("userID", userID).Str("url", url).Logger()
-
-	if url == "" {
-		log.Error().Msg("URL missing")
-		http.Error(w, "Missing URL", http.StatusBadRequest)
-		return
-	}
-
-	resp, err := http.Get(url)
-
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to fetch page from URL")
-		http.Error(w, fmt.Sprintf("Failed to fetch %s: %v", url, err), http.StatusInternalServerError)
-		return
-	}
-
-	defer resp.Body.Close()
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to page fetch read response body")
-		http.Error(w, fmt.Sprintf("Failed to read response body: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	w.Write(bodyBytes)
-
-	log.Info().Msg("Success")
-}
 func searchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
 	userID := getUserIdFromRequest(r)
@@ -517,4 +486,68 @@ func searchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info().Msg("Success")
+}
+
+func createHighlightHandler(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIdFromRequest(r)
+	log := log.With().Str("endpoint", "/createHighlight").Int("userID", userID).Logger()
+	httpErrorMsg := "Failed to create highlight"
+
+	var h Highlight
+
+	err := json.NewDecoder(r.Body).Decode(&h)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to decode highlight from request body")
+		http.Error(w, httpErrorMsg, http.StatusBadRequest)
+		return
+	}
+
+	log.Debug().Any("highlight", h).Msg("Received highlight")
+
+	err = createHighlight(h, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to save highlight to database")
+		http.Error(w, httpErrorMsg, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	log.Info().Msg("Success")
+}
+
+func deleteHighlightHanlder(w http.ResponseWriter, r *http.Request) {
+	httpErrorMsg := "Failed to delete highlight"
+	userID := getUserIdFromRequest(r)
+	highlightID := r.URL.Query().Get("id")
+	log := log.With().Str("endpoint", "/deleteHighlight").Int("userID", userID).Str("highlightID", highlightID).Logger()
+
+	err := deleteHighlight(userID, highlightID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to delete highlight from database")
+		http.Error(w, httpErrorMsg, http.StatusInternalServerError)
+		return
+	}
+
+	log.Info().Msg("Success")
+}
+
+func getAllUserHighlightsHandler(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIdFromRequest(r)
+
+	log := log.With().Str("endpoint", "/getAllUserHighlights").Int("userID", userID).Logger()
+
+	highlights, err := getUserHighlights(userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get user highlights from database")
+		http.Error(w, "Failed to get highlights", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(highlights)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to encode user highlights")
+		http.Error(w, "Failed to get highlights", http.StatusInternalServerError)
+		return
+	}
 }

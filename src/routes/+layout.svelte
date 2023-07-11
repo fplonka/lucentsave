@@ -77,6 +77,13 @@
 										? 'font-bold'
 										: ''}">Search</a
 								>
+								<a
+									href="/highlights"
+									class="block cursor-pointer py-2 px-4 hover:text-gray-500 {$page.url.pathname ===
+									'/highlights'
+										? 'font-bold'
+										: ''}">Highlights</a
+								>
 								<button
 									class="block cursor-pointer py-2 px-4 hover:text-gray-500"
 									on:click={signout}>Sign out</button

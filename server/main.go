@@ -63,6 +63,7 @@ func main() {
 func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		log.Debug().Str("path", r.URL.String()).Msg("Request incoming")
 		// fmt.Println(*r)
 		////time.Sleep(time.Second * 3)
 		//cookies := r.Cookies()

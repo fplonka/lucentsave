@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -27,11 +28,10 @@ type User struct {
 }
 
 type Highlight struct {
-	ID       int    `json:"id"`
-	Text     string `json:"text"`
-	StartPos int    `json:"startPos"`
-	EndPos   int    `json:"endPos"`
-	// or: text + occurence no. in html content
+	ID     uuid.UUID `json:"id"`
+	PostID int       `json:"postId"`
+	UserID int       `json:"-"` // denormalises the schema but gives faster queries for fetching all user highlights
+	Text   string    `json:"text"`
 }
 
 var (
@@ -49,6 +49,10 @@ var (
 	getUserHashedPasswordStmt *sql.Stmt
 	addUserStmt               *sql.Stmt
 	getPostsByBodySearchStmt  *sql.Stmt
+
+	createHighlightStmt   *sql.Stmt
+	deleteHighlightStmt   *sql.Stmt
+	getUserHighlightsStmt *sql.Stmt
 )
 
 func prepareStatements() error {
@@ -78,7 +82,7 @@ func prepareStatements() error {
 	if err != nil {
 		return err
 	}
-	updatePostBodyStmt, err = db.Prepare("UPDATE posts SET body = $1 WHERE id = $2")
+	updatePostBodyStmt, err = db.Prepare("UPDATE posts SET body = $1 WHERE id = $2 AND user_id = $3")
 	if err != nil {
 		return err
 	}
@@ -109,10 +113,23 @@ func prepareStatements() error {
 	) @@ plainto_tsquery('english', $2)
 	ORDER BY relevancy DESC
 `)
-
 	if err != nil {
 		return err
 	}
+
+	createHighlightStmt, err = db.Prepare("INSERT INTO highlights (id, post_id, user_id, text, added_at) VALUES ($1, $2, $3, $4, $5)")
+	if err != nil {
+		return err
+	}
+	deleteHighlightStmt, err = db.Prepare("DELETE FROM highlights WHERE id = $1 AND user_id = $2")
+	if err != nil {
+		return err
+	}
+	getUserHighlightsStmt, err = db.Prepare("SELECT id, post_id, text FROM highlights WHERE user_id = $1 ORDER BY added_at DESC")
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -235,14 +252,8 @@ func updatePostStatus(userID, postID int, read, liked bool) error {
 }
 
 func updatePostBody(userID, postID int, newBody string) error {
-	log.Info().Int("userID", userID).Int("postID", postID).Str("query", "checkUserIsPostOwner").Msg("")
-	err := checkUserIsPostOwner(userID, postID)
-	if err != nil {
-		return err
-	}
-
 	log.Info().Int("userID", userID).Int("postID", postID).Str("query", "updatePostBody").Msg("")
-	_, err = updatePostBodyStmt.Exec(newBody, postID)
+	_, err := updatePostBodyStmt.Exec(newBody, postID, userID)
 
 	if err != nil {
 		return err
@@ -297,6 +308,52 @@ func getUserHashedPassword(email string) ([]byte, error) {
 		return nil, err
 	}
 	return hashedPassword, nil
+}
+
+func deleteHighlight(userID int, highlightID string) error {
+	log.Info().Int("userID", userID).Str("highlightID", highlightID).Str("query", "deleteHighlight").Msg("")
+	_, err := deleteHighlightStmt.Exec(highlightID, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ErrNotFound
+		}
+		return err
+	}
+	return nil
+}
+
+func createHighlight(h Highlight, userID int) error {
+	log.Info().Int("userID", userID).Str("query", "createHighlight").Msg("")
+	_, err := createHighlightStmt.Exec(h.ID, h.PostID, userID, h.Text, time.Now().Unix())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getUserHighlights(userID int) ([]Highlight, error) {
+	log.Info().Int("userID", userID).Str("query", "getUserHighlights").Msg("")
+	rows, err := getUserHighlightsStmt.Query(userID)
+
+	if err != nil {
+		return []Highlight{}, err
+	}
+	defer rows.Close()
+
+	highlights := []Highlight{}
+	for rows.Next() {
+		var h Highlight
+		err := rows.Scan(&h.ID, &h.PostID, &h.Text)
+		if err != nil {
+			return []Highlight{}, err
+		}
+		highlights = append(highlights, h)
+	}
+	if err = rows.Err(); err != nil {
+		return []Highlight{}, err
+	}
+
+	return highlights, nil
 }
 
 // TODO: research indexes, transactions
