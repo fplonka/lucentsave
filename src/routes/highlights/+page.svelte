@@ -8,11 +8,14 @@
 
 <div class="mt-4">
 	{#each highlightsWithTitles as highlight (highlight.id)}
-		<div class="flex justify-between items-center">
-			<a href={`/post/${highlight.postId}#${highlight.id}`} class="hover:text-gray-500">
-				<div class="text-xl md:text-2xl font-bold block">{highlight.title}</div>
-				<div class="text-sm block">{highlight.text}</div>
-			</a>
+		<div>
+			<a
+				href={`/post/${highlight.postId}`}
+				class="text-xl md:text-2xl font-bold block hover:text-gray-500">{highlight.title}</a
+			>
+			<a href={`/post/${highlight.postId}#${highlight.id}`} class="block hover:text-gray-500"
+				>{highlight.text}</a
+			>
 		</div>
 		{#if highlight.id !== data.highlights[data.highlights.length - 1].id}
 			<hr class="border-black border-t-2 border-dashed my-4" />

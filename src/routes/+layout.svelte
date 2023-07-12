@@ -68,7 +68,7 @@
 						class="text-lg cursor-pointer z-10 px-1">☰</button
 					>
 					{#if dropdownOpen}
-						<div class="absolute right-0 w-36 bg-white z-20 border-2 border-black mt-1">
+						<div class="absolute right-0 text-right w-max bg-white z-20 border-2 border-black mt-1">
 							<ul class="text-black shadow-box">
 								<a
 									href="/search"
@@ -85,7 +85,7 @@
 										: ''}">Highlights</a
 								>
 								<button
-									class="block cursor-pointer py-2 px-4 hover:text-gray-500"
+									class="w-full text-right block cursor-pointer py-2 px-4 hover:text-gray-500"
 									on:click={signout}>Sign out</button
 								>
 							</ul>

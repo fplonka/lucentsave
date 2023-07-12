@@ -77,7 +77,8 @@
 				userSelection.rangeCount > 0 &&
 				userSelection.toString().length > 0 &&
 				postBody?.contains(userSelection.anchorNode) &&
-				postBody.contains(userSelection.focusNode)
+				postBody.contains(userSelection.focusNode) &&
+				userSelection.toString().length > 0
 			) {
 				highlightButtonVisible = true;
 
@@ -86,7 +87,6 @@
 					x: event.clientX - bounds?.left,
 					y: event.clientY - bounds?.top
 				};
-				// the rest of your logic...
 			}
 		};
 
@@ -99,15 +99,14 @@
 
 			if (target.dataset.highlightId) {
 				const highlightId = target.dataset.highlightId;
+
 				selectedHighlightId = highlightId;
 				highlightDeleteButtonVisible = true;
-
 				const bounds = document.getElementById('content')!.getBoundingClientRect();
 				highlightDeleteButtonPosition = {
 					x: event.clientX - bounds?.left,
 					y: event.clientY - bounds?.top
 				};
-				// await deleteHighlight(highlightId);
 			}
 		};
 
@@ -117,6 +116,9 @@
 
 			if (highlightButtonVisible && (!button || !button.contains(target))) {
 				highlightButtonVisible = false;
+				if (window.getSelection()) {
+					window.getSelection()!.empty();
+				}
 			}
 
 			button = document.getElementById('highlightDeleteButton');
@@ -142,7 +144,7 @@
 		const userSelection = window.getSelection();
 		highlightButtonVisible = false;
 		// Check if the selection is within the "postbody" div
-		if (userSelection && userSelection.rangeCount > 0) {
+		if (userSelection && userSelection.rangeCount > 0 && userSelection.toString().length > 0) {
 			let highlightID = uuid();
 			const selectedText = userSelection.toString();
 			highlightRange(userSelection.getRangeAt(0), highlightID);
@@ -166,6 +168,19 @@
 			await updateBody();
 		}
 	};
+
+	function getSelectionPosition(): { x: number; y: number } {
+		const selection = window.getSelection();
+		if (!selection || selection.rangeCount === 0) return { x: 0, y: 0 };
+
+		const range = selection.getRangeAt(0);
+		const rect = range.getBoundingClientRect();
+
+		return {
+			x: rect.left,
+			y: rect.top
+		};
+	}
 </script>
 
 <HighlightButton

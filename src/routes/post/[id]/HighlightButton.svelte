@@ -11,10 +11,10 @@
 <div>
 	{#if visible}
 		<button
-			id={id}
+			{id}
 			{style}
 			on:click|stopPropagation={callback}
-			class="text-black -mt-16 bg-white border-black border-2 py-1 px-2 text-center text-xl font-black hover:text-gray-500"
+			class="text-black -mt-14 bg-white border-black border-2 py-1 w-10 text-center text-xl font-black hover:text-gray-500"
 		>
 			{buttonText}
 		</button>
