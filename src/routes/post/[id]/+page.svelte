@@ -99,10 +99,12 @@
 			}
 		};
 
-		const touchendHandler = async (event: TouchEvent) => {
+		const selectionchangeHandler = async (event: Event) => {
+			console.log('handling');
 			const userSelection = window.getSelection();
 			// Check if the selection is within the "postbody" div
 			const postBody = document.getElementById('postbody');
+			console.log('handling 2');
 			if (
 				userSelection &&
 				userSelection.rangeCount > 0 &&
@@ -111,22 +113,17 @@
 				postBody.contains(userSelection.focusNode) &&
 				userSelection.toString().length > 0
 			) {
+				console.log('making visible');
 				const rect = userSelection.getRangeAt(0).getBoundingClientRect();
 				const bounds = document.getElementById('content')!.getBoundingClientRect();
 
 				highlightButtonVisible = true;
+				const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
 				highlightButtonPosition = {
 					x: rect.left + rect.width / 2 - bounds.left,
-					y: rect.top - bounds.top
+					y: rect.bottom + 4 * rootFontSize - bounds.top // Offset the 3.5 rem from the button and still move
+					// it down a bit. Super cursed
 				};
-
-				// highlightButtonVisible = true;
-
-				// const bounds = document.getElementById('content')!.getBoundingClientRect();
-				// highlightButtonPosition = {
-				// 	x: event.clientX - bounds?.left,
-				// 	y: event.clientY - bounds?.top
-				// };
 			}
 		};
 
@@ -166,19 +163,30 @@
 				highlightDeleteButtonVisible = false;
 			}
 		};
+		const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		console.log('touch:', isTouchDevice);
 
-		document.addEventListener('mouseup', mouseupHandler);
 		// document.getElementById('postbody')!.addEventListener('mouseup', mouseupHandler);
 		document.addEventListener('mousedown', mousedownHandler);
 		document.addEventListener('click', clickHandler);
-		document.addEventListener('touchend', touchendHandler);
+
+		if (isTouchDevice) {
+			console.log('adding selection update handler');
+			document.addEventListener('selectionchange', selectionchangeHandler);
+		} else {
+			document.addEventListener('mouseup', mouseupHandler);
+		}
 
 		return () => {
-			document.removeEventListener('mouseup', mouseupHandler);
 			// document.getElementById('postbody')!.removeEventListener('mouseup', mouseupHandler);
 			document.removeEventListener('mousedown', mousedownHandler);
 			document.removeEventListener('click', clickHandler);
-			document.removeEventListener('touchend', touchendHandler);
+
+			if (isTouchDevice) {
+				document.removeEventListener('selectionchange', selectionchangeHandler);
+			} else {
+				document.removeEventListener('mouseup', mouseupHandler);
+			}
 		};
 	});
 
@@ -210,19 +218,6 @@
 			await updateBody();
 		}
 	};
-
-	function getSelectionPosition(): { x: number; y: number } {
-		const selection = window.getSelection();
-		if (!selection || selection.rangeCount === 0) return { x: 0, y: 0 };
-
-		const range = selection.getRangeAt(0);
-		const rect = range.getBoundingClientRect();
-
-		return {
-			x: rect.left,
-			y: rect.top
-		};
-	}
 </script>
 
 <HighlightButton
