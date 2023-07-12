@@ -1,25 +1,9 @@
 <script lang="ts">
-	import { posts, postsLoaded } from '../../stores';
 	import type { PageData } from './$types';
-	import type { Post } from '../[listType]/+page.server';
-	import { get } from 'svelte/store';
 
 	export let data: PageData;
 
-	let postList: Post[] = get(posts);
-
-	console.log('posts: ');
-	postList.forEach(console.log);
-
-	// Add the post title to each highlight
-	let highlightsWithTitles = data.highlights.map((highlight) => {
-		console.log(`searching for ${highlight.postId}`);
-		let post = postList.find((post) => post.id === highlight.postId);
-		return {
-			...highlight,
-			title: post ? post.title : 'Post not found'
-		};
-	});
+	let highlightsWithTitles = data.highlights;
 </script>
 
 <div class="mt-4">
@@ -35,6 +19,10 @@
 		{/if}
 	{/each}
 </div>
+
+{#if highlightsWithTitles.length == 0}
+	<div class="mt-4 italic">Nothing highlighted yet...</div>
+{/if}
 
 <svelte:head>
 	<title>Highlights - Lucentsave</title>

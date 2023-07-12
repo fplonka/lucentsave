@@ -32,6 +32,7 @@ type Highlight struct {
 	PostID int       `json:"postId"`
 	UserID int       `json:"-"` // denormalises the schema but gives faster queries for fetching all user highlights
 	Text   string    `json:"text"`
+	Title  string    `json:"title"` // Not in the schema. Title of the associated post
 }
 
 var (
@@ -125,7 +126,13 @@ func prepareStatements() error {
 	if err != nil {
 		return err
 	}
-	getUserHighlightsStmt, err = db.Prepare("SELECT id, post_id, text FROM highlights WHERE user_id = $1 ORDER BY added_at DESC")
+	getUserHighlightsStmt, err = db.Prepare(`
+    SELECT h.id, h.post_id, h.text, p.title 
+    FROM highlights AS h
+    INNER JOIN posts AS p ON h.post_id = p.id 
+    WHERE h.user_id = $1 
+    ORDER BY h.added_at DESC
+	`)
 	if err != nil {
 		return err
 	}
@@ -343,7 +350,7 @@ func getUserHighlights(userID int) ([]Highlight, error) {
 	highlights := []Highlight{}
 	for rows.Next() {
 		var h Highlight
-		err := rows.Scan(&h.ID, &h.PostID, &h.Text)
+		err := rows.Scan(&h.ID, &h.PostID, &h.Text, &h.Title)
 		if err != nil {
 			return []Highlight{}, err
 		}

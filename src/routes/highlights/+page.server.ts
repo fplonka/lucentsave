@@ -10,7 +10,8 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 		credentials: 'include'
 	})
 	if (response.ok) {
-		const highlights: { id: string; postId: number; text: string }[] = await response.json()
+		const highlights: { id: string; postId: number; text: string; title: string }[] =
+			await response.json()
 		return { highlights }
 	}
 

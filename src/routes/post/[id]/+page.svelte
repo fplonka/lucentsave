@@ -10,6 +10,7 @@
 	import type { PageData } from './$types';
 	import { v4 as uuid } from 'uuid';
 	import { highlightRange, isNodeInRange } from '$lib/highlighting';
+	import HighlightButton from './HighlightButton.svelte';
 
 	export let data: PageData;
 
@@ -38,8 +39,36 @@
 		});
 	};
 
+	let highlightButtonVisible: boolean = false;
+	let highlightButtonPosition = { x: 0, y: 0 };
+
+	let highlightDeleteButtonVisible: boolean = false;
+	let highlightDeleteButtonPosition = { x: 0, y: 0 };
+
+	let selectedHighlightId = '';
+
+	const deleteHighlight = async (highlightId: string) => {
+		// Remove all spans with this highlight ID
+		highlightDeleteButtonVisible = false;
+		const highlights = document.querySelectorAll(`span[data-highlight-id="${highlightId}"]`);
+		highlights.forEach((span) => {
+			const parent = span.parentNode;
+			while (span.firstChild) {
+				parent?.insertBefore(span.firstChild, span);
+			}
+			parent?.removeChild(span);
+		});
+
+		await fetch(PUBLIC_BACKEND_API_URL + `deleteHighlight?id=${highlightId}`, {
+			method: 'PUT',
+			credentials: 'include'
+		});
+
+		await updateBody();
+	};
+
 	onMount(() => {
-		const mouseupHandler = async () => {
+		const mouseupHandler = async (event: MouseEvent) => {
 			const userSelection = window.getSelection();
 			// Check if the selection is within the "postbody" div
 			const postBody = document.getElementById('postbody');
@@ -50,66 +79,112 @@
 				postBody?.contains(userSelection.anchorNode) &&
 				postBody.contains(userSelection.focusNode)
 			) {
-				let highlightID = uuid();
-				const selectedText = userSelection.toString();
-				highlightRange(userSelection.getRangeAt(0), highlightID);
-				document.getSelection()?.empty();
+				highlightButtonVisible = true;
 
-				// Store the created highlight on the backend
-				await fetch(PUBLIC_BACKEND_API_URL + 'createHighlight', {
-					method: 'PUT',
-					credentials: 'include',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						id: highlightID,
-						postId: parseInt(data.id),
-						text: selectedText
-					})
-				});
-
-				// Save highlighted post body
-				await updateBody();
+				const bounds = document.getElementById('content')!.getBoundingClientRect();
+				highlightButtonPosition = {
+					x: event.clientX - bounds?.left,
+					y: event.clientY - bounds?.top
+				};
+				// the rest of your logic...
 			}
 		};
 
-		const clickHandler = async (event: Event) => {
+		let clickHandler = async (event: MouseEvent) => {
 			const target = event.target as HTMLElement;
+			if (target.parentNode && target.parentNode.nodeName === 'A') {
+				// User clicked on a link, do not delete the highlight.
+				return;
+			}
+
 			if (target.dataset.highlightId) {
 				const highlightId = target.dataset.highlightId;
-				// Use highlightId to delete the highlight from backend
+				selectedHighlightId = highlightId;
+				highlightDeleteButtonVisible = true;
 
-				// Remove all spans with this highlight ID
-				const highlights = document.querySelectorAll(`span[data-highlight-id="${highlightId}"]`);
-				highlights.forEach((span) => {
-					const parent = span.parentNode;
-					while (span.firstChild) {
-						parent?.insertBefore(span.firstChild, span);
-					}
-					parent?.removeChild(span);
-				});
+				const bounds = document.getElementById('content')!.getBoundingClientRect();
+				highlightDeleteButtonPosition = {
+					x: event.clientX - bounds?.left,
+					y: event.clientY - bounds?.top
+				};
+				// await deleteHighlight(highlightId);
+			}
+		};
 
-				await fetch(PUBLIC_BACKEND_API_URL + `deleteHighlight?id=${highlightId}`, {
-					method: 'PUT',
-					credentials: 'include'
-				});
+		const mousedownHandler = (event: Event) => {
+			const target = event.target as HTMLElement;
+			let button = document.getElementById('highlightButton');
 
-				await updateBody();
+			if (highlightButtonVisible && (!button || !button.contains(target))) {
+				highlightButtonVisible = false;
+			}
+
+			button = document.getElementById('highlightDeleteButton');
+			if (highlightDeleteButtonVisible && (!button || !button.contains(target))) {
+				highlightDeleteButtonVisible = false;
 			}
 		};
 
 		document.addEventListener('mouseup', mouseupHandler);
+		// document.getElementById('postbody')!.addEventListener('mouseup', mouseupHandler);
+		document.addEventListener('mousedown', mousedownHandler);
 		document.addEventListener('click', clickHandler);
 
 		return () => {
 			document.removeEventListener('mouseup', mouseupHandler);
+			// document.getElementById('postbody')!.removeEventListener('mouseup', mouseupHandler);
+			document.removeEventListener('mousedown', mousedownHandler);
 			document.removeEventListener('click', clickHandler);
 		};
 	});
+
+	let addHighlight = async () => {
+		const userSelection = window.getSelection();
+		highlightButtonVisible = false;
+		// Check if the selection is within the "postbody" div
+		if (userSelection && userSelection.rangeCount > 0) {
+			let highlightID = uuid();
+			const selectedText = userSelection.toString();
+			highlightRange(userSelection.getRangeAt(0), highlightID);
+			document.getSelection()?.empty();
+
+			// Store the created highlight on the backend
+			await fetch(PUBLIC_BACKEND_API_URL + 'createHighlight', {
+				method: 'PUT',
+				credentials: 'include',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					id: highlightID,
+					postId: parseInt(data.id),
+					text: selectedText
+				})
+			});
+
+			// Save highlighted post body
+			await updateBody();
+		}
+	};
 </script>
 
-<div class="space-y-4 mt-4">
+<HighlightButton
+	bind:visible={highlightButtonVisible}
+	position={highlightButtonPosition}
+	callback={addHighlight}
+	buttonText="＋"
+	id="highlightButton"
+/>
+
+<HighlightButton
+	bind:visible={highlightDeleteButtonVisible}
+	position={highlightDeleteButtonPosition}
+	callback={() => deleteHighlight(selectedHighlightId)}
+	buttonText="✕"
+	id="highlightDeleteButton"
+/>
+
+<div id="content" class="space-y-4 mt-4">
 	<div class="border-b-2 border-dashed border-black overflow-auto break-words">
 		<div class="flex justify-between items-center group">
 			<div>
@@ -120,7 +195,7 @@
 			</div>
 			<span
 				on:click={async () => {
-					if (confirm('Are you sure you want to delete this post?')) {
+					if (confirm('Are you sure you want to delete this post? All highlights will be lost.')) {
 						await deletePost(post.id);
 					}
 				}}

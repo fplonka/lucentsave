@@ -1,4 +1,4 @@
-import type { Post } from './+page.server'
+import type { Post } from '../[listType]/+page.server'
 
 export const filterPosts = (posts: Post[], path: string) => {
 	switch (path) {

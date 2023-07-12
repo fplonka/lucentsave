@@ -155,7 +155,7 @@
 	{/each}
 </div>
 
-{#if filteredPosts.length == 0}
+{#if filteredPosts.length == 0 && !isSaving}
 	<div class="mt-4 italic">Nothing {$page.url.pathname.substring(1)} yet...</div>
 {/if}
 

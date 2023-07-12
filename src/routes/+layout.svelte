@@ -7,8 +7,6 @@
 	import { browser } from '$app/environment';
 	import { PUBLIC_BACKEND_API_URL } from '$env/static/public';
 
-	let dropdownOpen = false;
-
 	const signout = async () => {
 		const response = await fetch(PUBLIC_BACKEND_API_URL + 'signout', {
 			method: 'POST',
@@ -34,6 +32,8 @@
 			isSignedIn.set(cookieExists);
 		}
 	});
+
+	let dropdownOpen = false;
 </script>
 
 {#if $isSignedIn}
@@ -64,7 +64,7 @@
 				>
 				<div class="relative">
 					<button
-						on:click={() => (dropdownOpen = !dropdownOpen)}
+						on:click|stopPropagation={() => (dropdownOpen = !dropdownOpen)}
 						class="text-lg cursor-pointer z-10 px-1">☰</button
 					>
 					{#if dropdownOpen}
@@ -97,13 +97,14 @@
 	</nav>
 {/if}
 
-<div
-	class="mb-8"
+<svelte:window
 	on:click={() => {
-		dropdownOpen = false;
+		if (dropdownOpen) {
+			dropdownOpen = false;
+		}
 	}}
->
-	<div class="px-4 sm:px-6 mx-auto max-w-2xl xl:max-w-3xl relative">
-		<slot />
-	</div>
+/>
+
+<div class="px-4 sm:px-6 mx-auto max-w-2xl xl:max-w-3xl relative mb-8">
+	<slot />
 </div>
