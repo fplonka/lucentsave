@@ -80,6 +80,15 @@
 				postBody.contains(userSelection.focusNode) &&
 				userSelection.toString().length > 0
 			) {
+				// const rect = userSelection.getRangeAt(0).getBoundingClientRect();
+				// const bounds = document.getElementById('content')!.getBoundingClientRect();
+
+				// highlightButtonVisible = true;
+				// highlightButtonPosition = {
+				// 	x: rect.left + rect.width / 2 - bounds.left,
+				// 	y: rect.top - bounds.top
+				// };
+
 				highlightButtonVisible = true;
 
 				const bounds = document.getElementById('content')!.getBoundingClientRect();
@@ -87,6 +96,37 @@
 					x: event.clientX - bounds?.left,
 					y: event.clientY - bounds?.top
 				};
+			}
+		};
+
+		const touchendHandler = async (event: TouchEvent) => {
+			const userSelection = window.getSelection();
+			// Check if the selection is within the "postbody" div
+			const postBody = document.getElementById('postbody');
+			if (
+				userSelection &&
+				userSelection.rangeCount > 0 &&
+				userSelection.toString().length > 0 &&
+				postBody?.contains(userSelection.anchorNode) &&
+				postBody.contains(userSelection.focusNode) &&
+				userSelection.toString().length > 0
+			) {
+				const rect = userSelection.getRangeAt(0).getBoundingClientRect();
+				const bounds = document.getElementById('content')!.getBoundingClientRect();
+
+				highlightButtonVisible = true;
+				highlightButtonPosition = {
+					x: rect.left + rect.width / 2 - bounds.left,
+					y: rect.top - bounds.top
+				};
+
+				// highlightButtonVisible = true;
+
+				// const bounds = document.getElementById('content')!.getBoundingClientRect();
+				// highlightButtonPosition = {
+				// 	x: event.clientX - bounds?.left,
+				// 	y: event.clientY - bounds?.top
+				// };
 			}
 		};
 
@@ -131,12 +171,14 @@
 		// document.getElementById('postbody')!.addEventListener('mouseup', mouseupHandler);
 		document.addEventListener('mousedown', mousedownHandler);
 		document.addEventListener('click', clickHandler);
+		document.addEventListener('touchend', touchendHandler);
 
 		return () => {
 			document.removeEventListener('mouseup', mouseupHandler);
 			// document.getElementById('postbody')!.removeEventListener('mouseup', mouseupHandler);
 			document.removeEventListener('mousedown', mousedownHandler);
 			document.removeEventListener('click', clickHandler);
+			document.removeEventListener('touchend', touchendHandler);
 		};
 	});
 

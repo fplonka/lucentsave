@@ -13,16 +13,12 @@ normalise relevancy by text length when searching?
 
 SEO data: page description, other stuff probably
 
-alignemnt of search/signout menu text
-
 italics angle
 
 consistent db query for getting post: id or id + user id?
 
 renamed /post/1 to /saved/1 ?
 
-highlight can sometimes accidentally clear post body???
-
-post not found on highlights list wtfffffffff
-
 span styling: typography adding space? breaks table layouts and moves thing very slightly
+
+mobile highlighting
