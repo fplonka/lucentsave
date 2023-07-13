@@ -1,4 +1,4 @@
-import type { Post } from '../routes/[listType]/+page.server'
+import type { Post } from "./types"
 import { PUBLIC_BACKEND_API_URL } from '$env/static/public'
 
 export async function updatePostStatus (

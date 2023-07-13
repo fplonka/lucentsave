@@ -16,7 +16,6 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-// We take in a sameSite setting so that we can set SameSite: None for the cookie used by browser extensions
 func generateAndSetAuthToken(w http.ResponseWriter, userID int) error {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{

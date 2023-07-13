@@ -68,7 +68,7 @@ func writeUserPosts(userID int, w http.ResponseWriter, log zerolog.Logger) error
 }
 
 const (
-	DEFAULT_SAME_SITE_MODE = http.SameSiteLaxMode
+	DEFAULT_SAME_SITE_MODE = http.SameSiteNoneMode
 )
 
 // Gets all posts for a given user, regardless of whether they're read or liked
@@ -279,7 +279,6 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signinHandler(w http.ResponseWriter, r *http.Request) {
-
 	var user User
 
 	log := log.With().Str("endpoint", "/signin").Logger()
