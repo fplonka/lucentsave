@@ -5,3 +5,5 @@ a11y warnings
 italics angle
 
 consistent db query for getting post: id or id + user id?
+
+ideally, in the hightlights list, the text color wouldn't change and instead the highlights would be clickable
