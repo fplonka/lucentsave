@@ -7,7 +7,13 @@ export default {
 				quoteless: {
 					css: {
 						'blockquote p:first-of-type::before': { content: 'none' },
-						'blockquote p:first-of-type::after': { content: 'none' }
+						'blockquote p:first-of-type::after': { content: 'none' },
+						// Awful edge case with pre in tables. Happens in e.g. eev.ee PHP post.
+						'table pre': {
+							width: 0,
+							minWidth: '100%',
+							overflowX: 'auto'
+						}
 					}
 				},
 				base: {

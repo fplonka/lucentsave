@@ -289,7 +289,7 @@
 />
 
 <div id="content" class="space-y-4 mt-4">
-	<div class="border-b-2 border-dashed border-black overflow-auto break-words">
+	<div class="border-b-2 border-dashed border-black break-words">
 		<div class="flex justify-between items-center group">
 			<div>
 				<h2 class="text-xl md:text-2xl font-bold text-black">{post.title}</h2>
