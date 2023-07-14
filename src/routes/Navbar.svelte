@@ -28,7 +28,7 @@
 
 <nav class="p-3 border-b-2 border-black">
 	<div class="container max-w-3xl xl:max-w-4xl mx-auto flex items-center justify-between">
-		<a href="/" class="font-black text-lg sm:text-xl hover:text-gray-500">Lucentsave</a>
+		<a href="/" class="font-black text-lg sm:text-xl md:text-2xl hover:text-gray-500">Lucentsave</a>
 		<div class="flex items-center">
 			<a
 				href="/saved"

@@ -7,6 +7,7 @@ import (
 	"net/mail"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -222,6 +223,7 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.Email = strings.ToLower(user.Email)
 	log = log.With().Str("email", user.Email).Logger()
 
 	// Check if email is valid
@@ -290,6 +292,7 @@ func signinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.Email = strings.ToLower(user.Email)
 	log = log.With().Str("email", user.Email).Logger()
 
 	userID, err := getIDIfUserExists(user.Email)
