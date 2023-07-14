@@ -12,18 +12,19 @@ export default {
 				},
 				base: {
 					css: {
-						lineHeight: 1.5
+						lineHeight: 1.5,
+						maxWidth: 'none'
 					}
 				},
 				lg: {
 					css: {
-						lineHeight: 1.5
+						lineHeight: 1.5,
+						maxWidth: 'none'
 					}
 				}
 			}),
 			fontFamily: {
-				serif: ['Bookerly'],
-				sans: ['Inter']
+				sans: ['Roboto', 'Inter', 'sans-serif']
 			}
 		}
 	},

@@ -6,97 +6,86 @@ html {
 	overflow-y: scroll;
 }
 
-details summary:after {
-	content: '☰';
-}
-
-details summary::-webkit-details-marker {
-	display: none;
-}
-
-.highlight {
-	background-color: yellow;
-}
-
-/* body { */
-/* 	@apply font-serif; */
-/* } */
-
 @font-face {
-	font-family: 'Bookerly';
-	src: url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Regular.eot'); /* IE9 Compat Modes */
-	src: url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Regular.eot?#iefix')
-			format('embedded-opentype'),
-		/* IE6-IE8 */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Regular.woff')
-			format('woff'),
-		/* Pretty Modern Browsers */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Regular.ttf')
-			format('truetype'),
-		/* Safari, Android, iOS */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Regular.svg#svgFontName')
-			format('svg'); /* Legacy iOS */
-	font-weight: normal;
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-Thin.ttf') format('truetype');
+	font-weight: 100;
 	font-style: normal;
 }
 
 @font-face {
-	font-family: 'Bookerly';
-	src: url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-RegularItalic.eot'); /* IE9 Compat Modes */
-	src: url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-RegularItalic.eot?#iefix')
-			format('embedded-opentype'),
-		/* IE6-IE8 */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-RegularItalic.woff')
-			format('woff'),
-		/* Pretty Modern Browsers */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-RegularItalic.ttf')
-			format('truetype'),
-		/* Safari, Android, iOS */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-RegularItalic.svg#svgFontName')
-			format('svg'); /* Legacy iOS */
-	font-weight: normal;
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-ThinItalic.ttf') format('truetype');
+	font-weight: 100;
 	font-style: italic;
 }
 
 @font-face {
-	font-family: 'Bookerly';
-	src: url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-BoldItalic.eot'); /* IE9 Compat Modes */
-	src: url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-BoldItalic.eot?#iefix')
-			format('embedded-opentype'),
-		/* IE6-IE8 */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-BoldItalic.woff')
-			format('woff'),
-		/* Pretty Modern Browsers */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-BoldItalic.ttf')
-			format('truetype'),
-		/* Safari, Android, iOS */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-BoldItalic.svg#svgFontName')
-			format('svg'); /* Legacy iOS */
-	font-weight: bold;
-	font-style: italic;
-}
-
-@font-face {
-	font-family: 'Bookerly';
-	src: url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Bold.eot'); /* IE9 Compat Modes */
-	src: url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Bold.eot?#iefix')
-			format('embedded-opentype'),
-		/* IE6-IE8 */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Bold.woff')
-			format('woff'),
-		/* Pretty Modern Browsers */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Bold.ttf')
-			format('truetype'),
-		/* Safari, Android, iOS */
-			url('https://rawcdn.githack.com/skotzko/oldblog/c34be5396747ab36b352ec48b964e3e8548d5e37/scss/fonts/bookerly/Bookerly-Bold.svg#svgFontName')
-			format('svg'); /* Legacy iOS */
-	font-weight: bold;
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-Light.ttf') format('truetype');
+	font-weight: 300;
 	font-style: normal;
 }
 
 @font-face {
-	font-family: 'Inter';
-	src: url(/fonts/Inter-VariableFont_slnt,wght.ttf) format('truetype-variations');
-	font-weight: 100 900;
-	font-style: italic 0deg 10deg;
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-LightItalic.ttf') format('truetype');
+	font-weight: 300;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-Regular.ttf') format('truetype');
+	font-weight: 400;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-Italic.ttf') format('truetype');
+	font-weight: 400;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-Medium.ttf') format('truetype');
+	font-weight: 500;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-MediumItalic.ttf') format('truetype');
+	font-weight: 500;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-Bold.ttf') format('truetype');
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-BoldItalic.ttf') format('truetype');
+	font-weight: 700;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-Black.ttf') format('truetype');
+	font-weight: 900;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('/fonts/Roboto/Roboto-BlackItalic.ttf') format('truetype');
+	font-weight: 900;
+	font-style: italic;
 }
