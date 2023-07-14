@@ -62,6 +62,8 @@
 		});
 
 		await updateBody();
+
+		reloadEventListeners();
 	};
 
 	onMount(() => {
@@ -77,15 +79,6 @@
 				postBody.contains(userSelection.focusNode) &&
 				userSelection.toString().length > 0
 			) {
-				// const rect = userSelection.getRangeAt(0).getBoundingClientRect();
-				// const bounds = document.getElementById('content')!.getBoundingClientRect();
-
-				// highlightButtonVisible = true;
-				// highlightButtonPosition = {
-				// 	x: rect.left + rect.width / 2 - bounds.left,
-				// 	y: rect.top - bounds.top
-				// };
-
 				highlightButtonVisible = true;
 
 				const bounds = document.getElementById('content')!.getBoundingClientRect();
@@ -97,11 +90,9 @@
 		};
 
 		const selectionchangeHandler = async (event: Event) => {
-			console.log('handling');
 			const userSelection = window.getSelection();
 			// Check if the selection is within the "postbody" div
 			const postBody = document.getElementById('postbody');
-			console.log('handling 2');
 			if (
 				userSelection &&
 				userSelection.rangeCount > 0 &&
@@ -110,7 +101,6 @@
 				postBody.contains(userSelection.focusNode) &&
 				userSelection.toString().length > 0
 			) {
-				console.log('making visible');
 				const rect = userSelection.getRangeAt(0).getBoundingClientRect();
 				const bounds = document.getElementById('content')!.getBoundingClientRect();
 
@@ -136,6 +126,7 @@
 
 				selectedHighlightId = highlightId;
 				highlightDeleteButtonVisible = true;
+				highlightSelected();
 				const bounds = document.getElementById('content')!.getBoundingClientRect();
 				highlightDeleteButtonPosition = {
 					x: event.clientX - bounds?.left,
@@ -157,22 +148,23 @@
 
 			button = document.getElementById('highlightDeleteButton');
 			if (highlightDeleteButtonVisible && (!button || !button.contains(target))) {
+				unhighlightSelected();
 				highlightDeleteButtonVisible = false;
 			}
 		};
 		const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-		console.log('touch:', isTouchDevice);
 
 		// document.getElementById('postbody')!.addEventListener('mouseup', mouseupHandler);
 		document.addEventListener('mousedown', mousedownHandler);
 		document.addEventListener('click', clickHandler);
 
 		if (isTouchDevice) {
-			console.log('adding selection update handler');
 			document.addEventListener('selectionchange', selectionchangeHandler);
 		} else {
 			document.addEventListener('mouseup', mouseupHandler);
 		}
+
+		reloadEventListeners();
 
 		return () => {
 			// document.getElementById('postbody')!.removeEventListener('mouseup', mouseupHandler);
@@ -193,9 +185,22 @@
 		// Check if the selection is within the "postbody" div
 		if (userSelection && userSelection.rangeCount > 0 && userSelection.toString().length > 0) {
 			let highlightID = uuid();
-			const selectedText = userSelection.toString();
 			highlightRange(userSelection.getRangeAt(0), highlightID);
 			document.getSelection()?.empty();
+
+			// Awful code to get the HTML of the smallest set of paragraphs which contanis the entire highlight.
+			let highlights = Array.from(
+				document.querySelectorAll(`span[data-highlight-id="${highlightID}"]`)
+			);
+			let paragraphs = new Set();
+			highlights.forEach((highlight) => {
+				// Find the closest paragraph parent of each highlight
+				let parent = highlight.closest('p');
+				if (parent) {
+					paragraphs.add(parent.outerHTML);
+				}
+			});
+			let paragraphHTML = Array.from(paragraphs).join('');
 
 			// Store the created highlight on the backend
 			await fetch(PUBLIC_BACKEND_API_URL + 'createHighlight', {
@@ -207,14 +212,63 @@
 				body: JSON.stringify({
 					id: highlightID,
 					postId: parseInt(data.id),
-					text: selectedText
+					text: paragraphHTML
 				})
 			});
 
 			// Save highlighted post body
 			await updateBody();
+
+			reloadEventListeners();
 		}
 	};
+
+	function reloadEventListeners() {
+		// Select all highlighted spans
+		let highlights = Array.from(document.querySelectorAll(`span[data-highlight-id]`));
+
+		// Remove any previous listeners (to avoid duplication if this function is called more than once)
+		highlights.forEach((highlight) => {
+			highlight.removeEventListener('mouseenter', handleMouseEnter);
+			highlight.removeEventListener('mouseleave', handleMouseLeave);
+		});
+
+		// Attach new event listeners
+		highlights.forEach((highlight) => {
+			highlight.addEventListener('mouseenter', handleMouseEnter);
+			highlight.addEventListener('mouseleave', handleMouseLeave);
+		});
+	}
+
+	// Event handler for mouseenter
+	function handleMouseEnter(this: HTMLElement) {
+		if (highlightDeleteButtonVisible) {
+			return;
+		}
+		let highlightID = this.dataset.highlightId;
+		let highlights = document.querySelectorAll(`span[data-highlight-id="${highlightID}"]`);
+		highlights.forEach((highlight) => highlight.classList.add('bg-yellow-300'));
+	}
+
+	// Event handler for mouseleave
+	function handleMouseLeave(this: HTMLElement) {
+		if (highlightDeleteButtonVisible) {
+			return;
+		}
+		let highlightID = this.dataset.highlightId;
+		let highlights = document.querySelectorAll(`span[data-highlight-id="${highlightID}"]`);
+		highlights.forEach((highlight) => highlight.classList.remove('bg-yellow-300'));
+	}
+
+	function highlightSelected() {
+		let highlights = document.querySelectorAll(`span[data-highlight-id="${selectedHighlightId}"]`);
+		highlights.forEach((highlight) => highlight.classList.add('bg-yellow-300'));
+	}
+
+	function unhighlightSelected() {
+		let highlights = document.querySelectorAll(`span[data-highlight-id="${selectedHighlightId}"]`);
+		highlights.forEach((highlight) => highlight.classList.remove('bg-yellow-300'));
+	}
 </script>
 
 <HighlightButton

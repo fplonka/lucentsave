@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PostBody from '../PostBody.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -13,9 +14,11 @@
 				href={`/post/${highlight.postId}`}
 				class="text-xl md:text-2xl font-bold block hover:text-gray-500">{highlight.title}</a
 			>
-			<a href={`/post/${highlight.postId}#${highlight.id}`} class="block hover:text-gray-500"
-				>{highlight.text}</a
-			>
+			<a href={`/post/${highlight.postId}#${highlight.id}`}>
+				<PostBody classes="hover:text-gray-700">
+					{@html highlight.text}
+				</PostBody>
+			</a>
 		</div>
 		{#if highlight.id !== data.highlights[data.highlights.length - 1].id}
 			<hr class="border-black border-t-2 border-dashed my-4" />
