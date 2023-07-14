@@ -5,7 +5,7 @@ Lucentsave is a simple website for saving and organizing the things you want to 
 Features:
 - Full body search in saved pages
 - Highlighting page text
-- Browser extensions for [Firefox](https://addons.mozilla.org/addon/lucentsave/) and Chrome (awaiting Chrome Web Store approval)
+- Browser extensions for [Firefox](https://addons.mozilla.org/addon/lucentsave/) and [Chrome](https://chrome.google.com/webstore/detail/ecjdaebdopdhiicoeoolkgdichihdlcg)
 
 Try now at [lucentsave.com](https://lucentsave.com).
 
