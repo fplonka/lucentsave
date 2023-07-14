@@ -15,7 +15,7 @@
 				class="text-xl md:text-2xl font-bold block hover:text-gray-500">{highlight.title}</a
 			>
 			<a href={`/post/${highlight.postId}#${highlight.id}`}>
-				<PostBody classes="hover:text-gray-700">
+				<PostBody classes="hover:!text-gray-500">
 					{@html highlight.text}
 				</PostBody>
 			</a>
