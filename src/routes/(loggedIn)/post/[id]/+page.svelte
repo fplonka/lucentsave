@@ -308,8 +308,7 @@
 				✕
 			</span>
 		</div>
-		<PostBody>
-			classes=''
+		<PostBody classes="">
 			{@html post.body}
 		</PostBody>
 	</div>
