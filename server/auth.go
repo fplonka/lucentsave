@@ -17,7 +17,7 @@ type Claims struct {
 }
 
 func generateAndSetAuthToken(w http.ResponseWriter, userID int) error {
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(7 * 24 * time.Hour) // 1 week
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		UserID:         userID,
 		StandardClaims: jwt.StandardClaims{ExpiresAt: expirationTime.Unix()},

@@ -26,28 +26,28 @@
 	let dropdownOpen = false;
 </script>
 
-<nav class="p-3 border-b-2 border-black">
+<nav class="px-3 py-2 border-b-2 border-black">
 	<div class="container max-w-3xl xl:max-w-4xl mx-auto flex items-center justify-between">
-		<a href="/" class="font-black text-lg sm:text-xl md:text-2xl hover:text-gray-500">Lucentsave</a>
+		<a href="/" class="font-black text-lg md:text-xl hover:text-gray-500">Lucentsave</a>
 		<div class="flex items-center">
 			<a
 				href="/saved"
-				class="hover:text-gray-500 lg:text-lg text-black mr-2 sm:mr-4 cursor-pointer {$page.url
-					.pathname === '/saved'
+				class="hover:text-gray-500 text-black mr-2 sm:mr-4 cursor-pointer {$page.url.pathname ===
+				'/saved'
 					? 'font-bold'
 					: ''}">Saved</a
 			>
 			<a
 				href="/read"
-				class="hover:text-gray-500 lg:text-lg text-black mr-2 sm:mr-4 cursor-pointer {$page.url
-					.pathname === '/read'
+				class="hover:text-gray-500 text-black mr-2 sm:mr-4 cursor-pointer {$page.url.pathname ===
+				'/read'
 					? 'font-bold'
 					: ''}">Read</a
 			>
 			<a
 				href="/liked"
-				class="hover:text-gray-500 lg:text-lg text-black mr-2 md:sm-4 cursor-pointer {$page.url
-					.pathname === '/liked'
+				class="hover:text-gray-500 text-black mr-2 md:sm-4 cursor-pointer {$page.url.pathname ===
+				'/liked'
 					? 'font-bold'
 					: ''}">Liked</a
 			>
@@ -61,20 +61,20 @@
 						<ul class="text-black shadow-box">
 							<a
 								href="/search"
-								class="lg:text-lg block cursor-pointer py-2 px-4 hover:text-gray-500 {$page.url
-									.pathname === '/search'
+								class="block cursor-pointer py-2 px-4 hover:text-gray-500 {$page.url.pathname ===
+								'/search'
 									? 'font-bold'
 									: ''}">Search</a
 							>
 							<a
 								href="/highlights"
-								class="lg:text-lg block cursor-pointer py-2 px-4 hover:text-gray-500 {$page.url
-									.pathname === '/highlights'
+								class="block cursor-pointer py-2 px-4 hover:text-gray-500 {$page.url.pathname ===
+								'/highlights'
 									? 'font-bold'
 									: ''}">Highlights</a
 							>
 							<button
-								class="lg:text-lg w-full text-right block cursor-pointer py-2 px-4 hover:text-gray-500"
+								class="w-full text-right block cursor-pointer py-2 px-4 hover:text-gray-500"
 								on:click={signout}>Sign out</button
 							>
 						</ul>

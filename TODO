@@ -2,8 +2,6 @@ figure out centos go install, try 1.20 profile optimized compilation
 saving PDFs, or at least viewing?
 a11y warnings
 
-italics angle
-
 consistent db query for getting post: id or id + user id?
 
-ideally, in the hightlights list, the text color wouldn't change and instead the highlights would be clickable
+highlights breaking if entire text is in e.g. bullet list

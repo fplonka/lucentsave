@@ -32,41 +32,39 @@
 	};
 </script>
 
-<div>
-	<form class="border-b-2 border-black border-dashed" on:submit|preventDefault={signin}>
+<form class="border-b-2 border-black border-dashed" on:submit|preventDefault={signin}>
+	<input
+		id="email"
+		bind:value={email}
+		required
+		placeholder="Email"
+		class="w-full py-1 mb-2 px-2 border-2 border-black"
+	/>
+
+	<input
+		id="password"
+		bind:value={password}
+		type="password"
+		required
+		placeholder="Password"
+		class="w-full py-1 px-2 border-2 border-black"
+	/>
+
+	<div class="flex items-center">
 		<input
-			id="email"
-			bind:value={email}
-			required
-			placeholder="Email"
-			class="w-full py-1 mb-2 px-2 border-2 border-black"
+			type="submit"
+			value="Sign in"
+			class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
 		/>
+		<span class="text-black ml-2">{errorMessage}</span>
+	</div>
+</form>
 
-		<input
-			id="password"
-			bind:value={password}
-			type="password"
-			required
-			placeholder="Password"
-			class="w-full py-1 px-2 border-2 border-black"
-		/>
-
-		<div class="flex items-center">
-			<input
-				type="submit"
-				value="Sign in"
-				class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer"
-			/>
-			<span class="text-black ml-2">{errorMessage}</span>
-		</div>
-	</form>
-
-	<p class="mt-4">
-		Don't have an account? <a href="/register" class="text-black underline hover:text-gray-500"
-			>Register.</a
-		>
-	</p>
-</div>
+<p class="mt-4">
+	Don't have an account? <a href="/register" class="text-black underline hover:text-gray-500"
+		>Register.</a
+	>
+</p>
 
 <svelte:head>
 	<title>Sign In - Lucentsave</title>

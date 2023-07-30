@@ -43,6 +43,7 @@ func main() {
 	// Logging config
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	if os.Getenv("ENV") == "production" {
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 		logWriter := &lumberjack.Logger{
 			Filename:   "log.txt",
 			MaxSize:    100, // megabytes after which a new file is created
@@ -54,6 +55,7 @@ func main() {
 		log.Logger = zerolog.New(logWriter).With().Timestamp().Logger()
 
 	} else {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	}
 
@@ -63,13 +65,7 @@ func main() {
 func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		log.Debug().Str("path", r.URL.String()).Msg("Request incoming")
-		// fmt.Println(*r)
-		////time.Sleep(time.Second * 3)
-		//cookies := r.Cookies()
-		//for i := 0; i < len(cookies); i++ {
-		//	fmt.Println(*cookies[i])
-		//}
+		log.Info().Str("path", r.URL.String()).Msg("Incoming")
 		next.ServeHTTP(w, r)
 		fmt.Println()
 	})

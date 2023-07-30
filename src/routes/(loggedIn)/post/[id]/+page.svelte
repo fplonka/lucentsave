@@ -186,6 +186,7 @@
 		// Check if the selection is within the "postbody" div
 		if (userSelection && userSelection.rangeCount > 0 && userSelection.toString().length > 0) {
 			let highlightID = uuid();
+			let commonAncestor = userSelection.getRangeAt(0).commonAncestorContainer;
 			highlightRange(userSelection.getRangeAt(0), highlightID);
 			document.getSelection()?.empty();
 
@@ -202,6 +203,33 @@
 				}
 			});
 			let paragraphHTML = Array.from(paragraphs).join('');
+
+			// Sometimes the paragraph HTML is empty because the highlight is in e.g. a bullet point. So then we fall
+			// back on the parent container child node contents.
+			if (paragraphHTML == '') {
+				if (commonAncestor.nodeType === Node.TEXT_NODE) {
+					commonAncestor = commonAncestor.parentElement!;
+				}
+				paragraphHTML = (commonAncestor as HTMLElement).innerHTML;
+			}
+
+			// Remove any other highlight spans from the paragraph HTML
+			let domParser = new DOMParser();
+			let doc = domParser.parseFromString(paragraphHTML, 'text/html');
+
+			// Remove highlight spans with different id
+			let spans = doc.querySelectorAll('span[data-highlight-id]');
+			spans.forEach((span) => {
+				if (span.getAttribute('data-highlight-id') !== highlightID) {
+					span.parentNode!.removeChild(span);
+				}
+			});
+
+			// Serialize Document back to HTML string
+			let serializer = new XMLSerializer();
+			paragraphHTML = serializer.serializeToString(doc);
+
+			console.log(paragraphHTML);
 
 			// Store the created highlight on the backend
 			await fetch(PUBLIC_BACKEND_API_URL + 'createHighlight', {
