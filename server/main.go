@@ -30,6 +30,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	addHandleFuncs(mux)
+	initChromeContext()
 
 	handler := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:5173", "http://localhost:4173", "http://localhost:3000", "http://185.196.220.234:3000", "185.196.220.234:3000", "https://185.196.220.234:3000",

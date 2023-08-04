@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/mail"
 	"os"
@@ -10,17 +12,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chromedp/cdproto/emulation"
+	"github.com/chromedp/chromedp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/sym01/htmlsanitizer"
 	"golang.org/x/crypto/bcrypt"
 
-	readability "github.com/go-shiori/go-readability"
+	readability "github.com/cixtor/readability"
 )
 
 // TODO: method types everywhere...
 func addHandleFuncs(mux *http.ServeMux) {
-	// TODO: middlewhere for checking post owner id == user id ??
 	mux.HandleFunc("/api/getAllUserPosts", authMiddleware(getSavedPostsHandler))
 	mux.HandleFunc("/api/getPost", authMiddleware(getPostHandler))
 	mux.HandleFunc("/api/createPostFromURL", authMiddleware(createPostFromURLHandler))
@@ -36,6 +39,24 @@ func addHandleFuncs(mux *http.ServeMux) {
 	mux.HandleFunc("/api/createHighlight", authMiddleware(createHighlightHandler))
 	mux.HandleFunc("/api/deleteHighlight", authMiddleware(deleteHighlightHanlder))
 	mux.HandleFunc("/api/getAllUserHighlights", authMiddleware(getAllUserHighlightsHandler))
+}
+
+var ctx context.Context
+var cancel context.CancelFunc
+
+func initChromeContext() {
+	userAgent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+
+	ctx, cancel = chromedp.NewExecAllocator(context.Background(),
+		append(chromedp.DefaultExecAllocatorOptions[:],
+			chromedp.Flag("user-data-dir", "/userdata"),
+		)...)
+	ctx, cancel = chromedp.NewContext(ctx)
+
+	err := chromedp.Run(ctx, emulation.SetUserAgentOverride(userAgent))
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to run ChromeDP context")
+	}
 }
 
 func writeErrorResponse(err error, w http.ResponseWriter) {
@@ -127,9 +148,51 @@ func createPostFromURLHandler(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.Query().Get("url")
 	log := log.With().Str("endpoint", "/createPostFromURL").Int("userID", userID).Str("url", url).Logger()
 
-	article, err := readability.FromURL(url, 10*time.Second)
+	// Fetch the page HTML
+	var pageHTML string
+	res, err := http.Get(url)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to save article from URL")
+		log.Error().Err(err).Msg("Failed to get page from URL")
+		http.Error(w, "Failed to save page", http.StatusBadRequest)
+		return
+	}
+	content, err := io.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to read response body content")
+		http.Error(w, "Failed to save page", http.StatusBadRequest)
+		return
+	}
+	pageHTML = string(content)
+
+	readability := readability.New()
+	if !readability.IsReadable(strings.NewReader(pageHTML)) {
+		// The normal way didn't work, probably due to JS; try to load using Chrome Headless instance
+		log.Warn().Msg("Doing slow load")
+		localCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+
+		err := chromedp.Run(localCtx,
+			chromedp.Navigate(url),
+			chromedp.OuterHTML(`html`, &pageHTML, chromedp.ByQuery),
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to run Chrome context")
+			http.Error(w, "Failed to save page", http.StatusBadRequest)
+			return
+		}
+	}
+
+	// If it's still not readable, give up.
+	if !readability.IsReadable(strings.NewReader(pageHTML)) {
+		log.Warn().Err(err).Msg("Page not readable")
+		http.Error(w, "Failed to save page", http.StatusBadRequest)
+		return
+	}
+
+	article, err := readability.Parse(strings.NewReader(pageHTML), url)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to parse page HTML")
 		http.Error(w, "Failed to save page", http.StatusBadRequest)
 		return
 	}
