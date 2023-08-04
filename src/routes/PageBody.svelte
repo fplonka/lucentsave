@@ -1,5 +1,3 @@
-<div class="border-red-500 border-x-2 max-w-5xl mx-auto">
-	<div class="px-4 sm:px-6 mx-auto max-w-2xl xl:max-w-3xl relative mb-8">
-		<slot />
-	</div>
+<div class="px-4 sm:px-6 mx-auto max-w-2xl xl:max-w-3xl relative mb-8">
+	<slot />
 </div>
