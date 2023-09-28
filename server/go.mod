@@ -17,7 +17,7 @@ require (
 	github.com/chromedp/chromedp v0.9.1
 	github.com/cixtor/readability v1.0.0
 	github.com/google/uuid v1.3.0
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.30.0
 	github.com/sym01/htmlsanitizer v1.0.1
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
