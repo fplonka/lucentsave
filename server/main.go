@@ -30,12 +30,10 @@ func main() {
 
 	mux := http.NewServeMux()
 	addHandleFuncs(mux)
-	initChromeContext()
+	// initChromeContext()
 
 	handler := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:5173", "http://localhost:4173", "http://localhost:3000", "http://185.196.220.234:3000", "185.196.220.234:3000", "https://185.196.220.234:3000",
-			"http://lucentsave.com:3000", "https://lucentsave.com:3000", "lucentsave.com:3000", "lucentsave.com", "www.lucentsave.com", "http://lucentsave.com", "https://lucentsave.com", "https://www.lucentsave.com", "lucentsave.com",
-			"moz-extension://1901ffb7-5f60-467a-a887-5a094a75ef22", "moz-extension://0703806d-4361-43de-96b4-299e5c5a1740]", "moz-extension://4fcecfe6-8f4b-4f99-ba75-0ceaaa0d1432"},
+		AllowedOrigins:   []string{"http://localhost:5173", "lucentsave.com", "www.lucentsave.com", "http://lucentsave.com", "https://lucentsave.com", "https://www.lucentsave.com", "lucentsave.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,

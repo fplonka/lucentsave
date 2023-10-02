@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/mail"
+	nurl "net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -19,7 +19,7 @@ import (
 	"github.com/sym01/htmlsanitizer"
 	"golang.org/x/crypto/bcrypt"
 
-	readability "github.com/cixtor/readability"
+	readability_alt "github.com/go-shiori/go-readability"
 )
 
 // TODO: method types everywhere...
@@ -44,6 +44,7 @@ func addHandleFuncs(mux *http.ServeMux) {
 var ctx context.Context
 var cancel context.CancelFunc
 
+// CURRENTLY UNUSED (?)
 func initChromeContext() {
 	userAgent := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
 
@@ -148,57 +149,21 @@ func createPostFromURLHandler(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.Query().Get("url")
 	log := log.With().Str("endpoint", "/createPostFromURL").Int("userID", userID).Str("url", url).Logger()
 
-	// Fetch the page HTML
-	var pageHTML string
-	res, err := http.Get(url)
+	article, err := readability_alt.FromURL(url, 10*time.Second)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get page from URL")
-		http.Error(w, "Failed to save page", http.StatusBadRequest)
-		return
-	}
-	content, err := io.ReadAll(res.Body)
-	res.Body.Close()
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to read response body content")
-		http.Error(w, "Failed to save page", http.StatusBadRequest)
-		return
-	}
-	pageHTML = string(content)
-
-	readability := readability.New()
-	if !readability.IsReadable(strings.NewReader(pageHTML)) {
-		// The normal way didn't work, probably due to JS; try to load using Chrome Headless instance
-		log.Warn().Msg("Doing slow load")
-		localCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-		defer cancel()
-
-		err := chromedp.Run(localCtx,
-			chromedp.Navigate(url),
-			chromedp.OuterHTML(`html`, &pageHTML, chromedp.ByQuery),
-		)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to run Chrome context")
-			http.Error(w, "Failed to save page", http.StatusBadRequest)
-			return
-		}
-	}
-
-	// If it's still not readable, give up.
-	if !readability.IsReadable(strings.NewReader(pageHTML)) {
-		log.Warn().Err(err).Msg("Page not readable")
+		log.Error().Err(err).Msg("Failed to parse from URL")
 		http.Error(w, "Failed to save page", http.StatusBadRequest)
 		return
 	}
 
-	article, err := readability.Parse(strings.NewReader(pageHTML), url)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to parse page HTML")
-		http.Error(w, "Failed to save page", http.StatusBadRequest)
-		return
+	if article.Title == "" {
+		log.Warn().Msg("Article title was empty after parsing, using URL path as title")
+		parsedURL, _ := nurl.Parse(url)
+		article.Title = parsedURL.Path
 	}
 
-	if article.Title == "" || article.Content == "" {
-		log.Warn().Msg("Article title or content was empty after parsing")
+	if article.Content == "" {
+		log.Warn().Msg("Article content was empty after parsing")
 		http.Error(w, "Failed to save page", http.StatusBadRequest)
 		return
 	}

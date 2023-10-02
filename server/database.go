@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -280,6 +281,9 @@ func getIDIfUserExists(email string) (int, error) {
 }
 
 func getPostsBySearchInBody(searchString string, userID int) ([]Post, error) {
+	start := time.Now()
+	defer func() { log.Debug().Msg(fmt.Sprintf("Search in post bodies took %v\n", time.Since(start))) }()
+
 	log.Info().Int("userID", userID).Str("query", "getPostsByBodySearch").Msg("")
 	rows, err := getPostsByBodySearchStmt.Query(userID, searchString)
 	if err != nil {
