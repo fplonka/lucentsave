@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
@@ -10,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -81,102 +79,21 @@ func initTemplates() {
 func initDatabase() {
 	// Init db connection
 	ctx := context.Background()
-	connString := fmt.Sprintf("postgres://ls2user:%s@localhost:5433/lucentsave2", os.Getenv("LS2_DB_PASSWORD"))
-	// connString := fmt.Sprintf("postgres://ls2user@localhost:5433/lucentsave2")
 	var err error
-	db, err = pgxpool.New(ctx, connString)
+	db, err = pgxpool.New(ctx, os.Getenv("LS2_DB_URL"))
 	if err != nil {
-		panic(fmt.Errorf("Unable to connect to database: %v", err))
+		panic(fmt.Errorf("unable to connect to database: %v", err))
 	}
-}
-
-func copyUsers(db *sql.DB) {
-	// Query to select all users
-	rows, err := db.Query("SELECT id, email, hashed_password FROM users")
+	err = db.Ping(ctx)
 	if err != nil {
-		log.Fatalf("Query failed: %v", err)
+		panic(fmt.Errorf("ping failed: %v", err))
 	}
-	defer rows.Close()
-
-	type user struct {
-		id       int
-		email    string
-		password string
-	}
-
-	// Iterate over the results
-	users := []user{}
-	for rows.Next() {
-		var usr user
-		if err := rows.Scan(&usr.id, &usr.email, &usr.password); err != nil {
-			log.Printf("Row scan failed: %v", err)
-			continue
-		}
-		// Print the email
-		fmt.Println(usr.email)
-		users = append(users, usr)
-	}
-	if err = rows.Err(); err != nil {
-		log.Fatalf("Row iteration error: %v", err)
-	}
-
-	sort.Slice(users, func(i, j int) bool { return users[i].id < users[j].id })
-
-	for _, usr := range users {
-		fmt.Println("USER:", usr.id, usr.email)
-		id, err := createUser(usr.email, usr.password)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println("created with", id, "for", usr.id)
-	}
-
-}
-
-func migrate() {
-	dbOld, err := sql.Open("postgres", "user=postgres dbname=mydatabase sslmode=disable port=5433")
-
-	copyUsers(dbOld)
-
-	if err != nil {
-		log.Fatalf("Failed to connect to old database: %v", err)
-	}
-	defer dbOld.Close()
-
-	// Query to select all posts
-	rows, err := dbOld.Query("SELECT id, user_id, title, body, read, liked, url, added_at FROM posts")
-	if err != nil {
-		log.Fatalf("Query failed: %v", err)
-	}
-	defer rows.Close()
-
-	// Iterate over the results
-	for rows.Next() {
-		var post Post
-		if err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Body, &post.IsRead, &post.IsLiked, &post.URL, &post.TimeAdded); err != nil {
-			log.Printf("Row scan failed: %v", err)
-			continue
-		}
-
-		// post.UserID -= 34
-		savePost(post)
-		// Print the title
-		fmt.Println(post.Title)
-	}
-
-	// Check for any errors encountered during iteration
-	if err = rows.Err(); err != nil {
-		log.Fatalf("Row iteration error: %v", err)
-	}
-
 }
 
 func main() {
 	initDatabase()
 	initTemplates()
 	initOpenaiClient()
-	// migrate()
 	// generateEmbeddingsForExistingPosts()
 
 	addHandleFuncs()

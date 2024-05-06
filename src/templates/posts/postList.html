@@ -149,7 +149,7 @@
 
 {{if eq .Path "/search"}}
 <!-- tab index?? -->
-<form class="mt-5 flex items-center w-full">
+<form class="mt-5 flex items-center w-full" onsubmit="return false">
     <input tabindex="1" type="search" name="query" class="flex-1 py-1 px-2 border-2 border-black"
         placeholder="Enter term to start searching..." hx-post="/query" hx-trigger="input changed delay:100ms, search"
         hx-target="#posts" hx-indicator="#query-indicator" />
