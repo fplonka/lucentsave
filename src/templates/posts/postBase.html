@@ -1,0 +1,27 @@
+{{define "navbar"}}
+<nav id="navbar" hx-swap-oob="true" class="px-3 py-2 border-b-2 border-black" id="navTest">
+    <div class="container max-w-3xl xl:max-w-4xl mx-auto flex items-center justify-between">
+        <a href="/" class="font-black text-lg md:text-xl hover:text-gray-500">Lucentsave</a>
+        <div class="flex items-center">
+            <a href="/saved"
+                class="hover:text-gray-500 text-black mr-2 sm:mr-4 cursor-pointer {{if .Saved}} font-bold {{end}}">Saved</a>
+            <a href="/read"
+                class="hover:text-gray-500 text-black mr-2 sm:mr-4 cursor-pointer {{if .Read}} font-bold {{end}}">Read</a>
+            <a href="/search"
+                class="hover:text-gray-500 text-black mr-2 md:sm-4 cursor-pointer {{if .Search}} font-bold {{end}}">Search</a>
+        </div>
+    </div>
+</nav>
+{{end}}
+
+{{define "main"}}
+
+{{ template "navbar" .}}
+
+{{template "pageBodyStart"}}
+<div id="content">
+    {{template "content" .}}
+</div>
+{{template "pageBodyEnd"}}
+
+{{end}}

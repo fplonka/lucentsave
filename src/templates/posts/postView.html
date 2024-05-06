@@ -1,0 +1,93 @@
+{{define "title"}} Post View {{end}}
+
+{{define "postStatus"}}
+<form id="post-status-form" class="space-y-4 mt-4">
+    <div class="flex justify-between items-center">
+        <div class="flex space-x-2">
+            <button type="button" id="read-button" onclick="toggleRead()"
+                class="py-1 px-2 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer">
+                {{if .Post.IsRead}} Mark as Unread {{ else }} Mark as Read {{end}}
+            </button>
+            <button type="button" id="like-button" onclick="toggleLike()"
+                class="text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500"
+                style=" display: {{if .Post.IsRead}} block {{else}} none {{end}}">
+                {{if .Post.IsLiked}} ★ {{ else }} ☆ {{end}}
+            </button>
+        </div>
+        <!-- This span is for a scroll-to-top functionality you might want to use later -->
+        <span class=" text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500" onclick="window.scrollTo(0, 0)">
+            ↑
+        </span>
+    </div>
+</form>
+
+<script>
+    // as string because js hates the braces and formatting will break them
+    var isReadStr = '{{.Post.IsRead}}'
+    var isLikedStr = '{{.Post.IsLiked}}'
+    var isRead = isReadStr === 'true' ? true : false;
+    var isLiked = isLikedStr === 'true' ? true : false;
+
+    function updateServerState() {
+        let values = {};
+        if (isRead) values.read = true; // Include key only if true
+        if (isLiked) values.liked = true; // Include key only if true
+
+        htmx.ajax('POST', '/update-post-state?id={{.Post.ID}}', {
+            values: values,
+            swap: 'none'
+        }).then(() => {
+            console.log('State updated successfully');
+        });
+    }
+
+    function toggleRead() {
+        isRead = !isRead;
+        document.getElementById('read-button').innerText = isRead ? 'Mark as Unread' : 'Mark as Read';
+        document.getElementById('like-button').style.display = isRead ? 'block' : 'none';
+        if (!isRead) {
+            isLiked = false;
+            document.getElementById('like-button').innerText = '☆';
+        }
+        updateServerState();
+    }
+
+    function toggleLike() {
+        isLiked = !isLiked;
+        document.getElementById('like-button').innerText = isLiked ? '★' : '☆';
+        updateServerState();
+    }
+</script>
+{{end}}
+
+{{define "content"}}
+
+<div class="border-b-2 border-dashed border-black break-words space-y-4">
+    <div class="flex justify-between items-center group">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-black space-y-4 mt-4">{{.Post.Title}}</h2>
+            <a href="{{.Post.URL}}"
+                class="text-sm text-black block hover:underline hover:text-gray-500">{{.Post.URL}}</a>
+        </div>
+        <div class=" text-black px-2 py-1 cursor-pointer font-black hover:text-gray-500"
+            hx-post="/delete-post?id={{.Post.ID}}" hx-confirm="Are you sure you wish to delete this post?"
+            hx-trigger="click">
+            ✕
+            <!-- TODO  -->
+        </div>
+    </div>
+
+    <div
+        class="prose
+			prose-base md:prose-lg text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
+			prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500
+			relative prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 prose-code:font-normal prose-code:p-0.5">
+        {{.Post.BodyHTML}}
+    </div>
+</div>
+
+<!-- dynamically get post status, so that we can serve the static part separately and cache it -->
+<div hx-get="/post-status?id={{.Post.ID}}" hx-trigger="load">
+</div>
+
+{{end}}

@@ -1,0 +1,27 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ template "title" . }}</title>
+    <script defer src="../static/htmx.min.js"></script>
+    <link rel="preload stylesheet" href="../static/output.css">
+
+</head>
+
+<body>
+    <main>
+        {{ template "main" . }}
+    </main>
+</body>
+
+</html>
+{{end}}
+
+{{define "pageBodyStart"}}
+<div class="px-4 sm:px-6 mx-auto max-w-2xl xl:max-w-3xl relative mb-8">
+    {{end}}
+    {{define "pageBodyEnd"}}
+</div>
+{{end}}

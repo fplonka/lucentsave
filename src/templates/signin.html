@@ -1,0 +1,59 @@
+{{define "title"}} Post List {{end}}
+{{define "main"}}
+
+{{template "pageBodyStart"}}
+
+<div class="mt-12 mb-12 mx-auto w-max border-black border-2 p-8">
+    <div class="space-y-2">
+        <div class="flex items-baseline font-semibold">
+            <span class="text-black text-2xl font-extrabold mr-2">Lucent</span>
+            <span class="text-black text-base font-light">[ˈlü-sᵊnt]</span>
+            <span class="text-black text-base font-semibold italic ml-2">adjective</span>
+        </div>
+        <div class="flex">
+            <span class="font-bold mr-1 w-4 inline-block">1.</span>
+            <span class=" text-black">Glowing with light</span>
+        </div>
+        <div class="flex">
+            <span class="font-bold mr-1 w-4 inline-block">2.</span>
+            <span class=" text-black">Marked by clarity or translucence</span>
+        </div>
+    </div>
+</div>
+<div class="font-normal text-black mb-12 mx-auto text-center text-base">
+    A dead simple website for saving the things you want to read.
+</div>
+
+<div id="auth-form">
+    {{ if .isSignIn}} {{template "signInForm" .}} {{ else }} {{template "registerForm" .}} {{end}}
+</div>
+
+{{template "pageBodyEnd"}}
+
+{{end}}
+
+{{define "signInForm"}}
+<form method="post" action="/authenticate" class="border-b-2 border-black border-dashed">
+    <input type="email" name="email" placeholder="Email" required class="w-full py-1 mb-2 px-2 border-2 border-black">
+    <input type="password" name="password" placeholder="Password" required
+        class="w-full py-1 px-2 border-2 border-black">
+    <button type="submit"
+        class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer">Sign
+        In</button>
+</form>
+<p hx-boost="true" class="mt-4">Don't have an account? <a href="/register" hx-get="/register" hx-target="#auth-form"
+        hx-swap="innerHTML" class="text-black underline hover:text-gray-500">Register.</a>
+</p>
+{{end}}
+
+{{define "registerForm"}}
+<form method="post" action="/create-user" class="border-b-2 border-black border-dashed">
+    <input type="email" name="email" placeholder="Email" required class="w-full py-1 mb-2 px-2 border-2 border-black">
+    <input type="password" name="password" placeholder="Password" required
+        class="w-full py-1 px-2 border-2 border-black">
+    <button type="submit"
+        class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer">Register</button>
+</form>
+<p htmx-boost="true" class="mt-4">Already have an account? <a href="/signin" hx-get="/signin" hx-target="#auth-form"
+        hx-swap="innerHTML" class="text-black underline hover:text-gray-500">Sign in.</a></p>
+{{end}}

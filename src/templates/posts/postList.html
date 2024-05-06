@@ -1,0 +1,165 @@
+{{define "title"}} Post List {{end}}
+
+{{define "postEntry"}}
+<div class="flex justify-between items-center">
+    <a href="/post?id={{.Post.ID}}" class="hover:text-gray-500">
+        <h2 class="text-xl md:text-2xl font-bold block">{{.Post.Title}}</h2>
+        <p class="text-sm block">{{(baseURL .Post.URL)}}</p>
+    </a>
+
+    {{if .ShowLikeCheckbox}}
+    <button type="button" id="like-button-{{.Post.ID}}" onclick="toggleLike('{{.Post.ID}}')"
+        class="text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500"
+        style="display: {{if .Post.IsRead}}block{{else}}none{{end}};">
+        {{if .Post.IsLiked}} ★ {{else}} ☆ {{end}}
+    </button>
+    {{end}}
+</div>
+{{if not (isLast .Index .Total)}}
+<hr class="border-black border-t-2 border-dashed my-4" />
+{{end}}
+{{end}}
+
+{{define "postList"}}
+<div class="flex justify-between items-center mt-4 border-black border-b-2 border-dashed pb-4" id="indicator"
+    style="display: none;">
+    <div class="text-sm block italic" id="indicatorText">Saving...</div>
+</div>
+
+<div id="posts" class="mt-4">
+    {{$totalPosts := len .Posts}}
+    {{$showCheckbox := eq .Path "/read"}}
+    {{range $index, $element := .Posts}}
+    {{template "postEntry" dict "Post" $element "Index" $index "Total" $totalPosts "ShowLikeCheckbox" $showCheckbox}}
+    {{end}}
+</div>
+{{end}}
+
+{{define "content"}}
+
+{{if eq .Path "/read"}}
+<script>
+    // Toggle like state for a post by ID
+    function toggleLike(postId) {
+        var button = document.getElementById('like-button-' + postId);
+        var isLiked = button.textContent.trim() === '★'; // Check current state from button text
+
+        // Toggle the state
+        isLiked = !isLiked;
+        button.textContent = isLiked ? '★' : '☆';
+
+        values = {}
+        if (isLiked) {
+            values.liked = true
+        }
+
+        // Update the server state using htmx.ajax
+        htmx.ajax('POST', '/mark-liked?id=' + postId, {
+            values: values,
+            swap: 'none'
+        }).then(() => {
+            console.log('Like state updated successfully for post', postId);
+        }).catch(error => {
+            console.error('Failed to update like state for post', postId, error);
+        });
+    }
+</script>
+{{end}}
+
+{{if eq .Path "/saved"}}
+<div class="mt-5 flex items-center space-x-2">
+    <input type="url" id="urlInput" placeholder="Enter link to save here..."
+        class="w-full py-1 px-2 border-2 border-black">
+    <button id="fetchAndSaveBtn"
+        class="py-1 px-2 border-2 border-black bg-black text-white hover:bg-gray-700 cursor-pointer">Save</button>
+</div>
+
+
+<script async src="../static/readability.js"></script>
+<script>
+    document.getElementById('fetchAndSaveBtn').addEventListener('click', function () {
+        const indicatorElm = document.getElementById('indicator')
+        const indicatorTextElm = document.getElementById('indicatorText')
+        indicatorElm.style.display = 'block'
+        indicatorTextElm.textContent = 'Saving post...'
+
+        const url = document.getElementById('urlInput').value;
+        fetch(`/fetch-url?url=${encodeURIComponent(url)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.text();
+            })
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+
+                // Update all relative image URLs to absolute URLs
+                const parsedUrl = new URL(url);
+                const baseSiteUrl = `${parsedUrl.protocol}//${parsedUrl.host}`;
+
+                function updateUrlAttribute(element, attribute) {
+                    const url = element.getAttribute(attribute);
+                    console.log("have url:", url)
+                    // convert relative urls, but not page-jumping navigation urls which have a #section part
+                    if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('//') && !url.includes('#')) {
+                        element.setAttribute(attribute, baseSiteUrl + (url.startsWith('/') ? '' : '/') + url);
+                        console.log("updated to:", element.getAttribute(attribute))
+                    }
+                }
+                doc.querySelectorAll('img').forEach(img => {
+                    updateUrlAttribute(img, 'src');
+                });
+                doc.querySelectorAll('a').forEach(link => {
+                    updateUrlAttribute(link, 'href');
+                });
+
+                // Use Readability to parse the document
+                const reader = new Readability(doc);
+                const article = reader.parse();
+
+                // Prepare data for backend
+                const data = {
+                    title: article.title,
+                    content: article.content,
+                    url: url,
+                    push: true
+                };
+
+                htmx.ajax('POST', '/save', {
+                    target: '#posts',
+                    swap: 'afterbegin',
+                    values: data,
+                }).then(() => {
+                    console.log('Post saved and UI updated successfully!');
+                    indicatorElm.style.display = 'none'
+                }).catch(error => {
+                    indicatorTextElm.textContent = "Failed to save post"
+                    console.error('Error with htmx request:', error);
+                });
+
+            })
+            .catch(error => {
+                indicatorTextElm.textContent = "Failed to save post"
+                console.error('Error fetching or processing URL:', error);
+            });
+    });
+</script>
+{{end}}
+
+{{if eq .Path "/search"}}
+<!-- tab index?? -->
+<form class="mt-5 flex items-center w-full">
+    <input tabindex="1" type="search" name="query" class="flex-1 py-1 px-2 border-2 border-black"
+        placeholder="Enter term to start searching..." hx-post="/query" hx-trigger="input changed delay:100ms, search"
+        hx-target="#posts" hx-indicator="#query-indicator" />
+    <div id="query-indicator" class="opacity-0 my-indicator ml-3">
+        <img src="../../static/spinner.svg" class="w-6 h-6" alt="Loading...">
+    </div>
+</form>
+
+{{end}}
+
+{{template "postList" .}}
+
+{{end}}
