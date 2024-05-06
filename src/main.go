@@ -81,7 +81,8 @@ func initTemplates() {
 func initDatabase() {
 	// Init db connection
 	ctx := context.Background()
-	connString := fmt.Sprintf("postgres://ls2user:%s@localhost/lucentsave2", os.Getenv("LS2_DB_PASSWORD"))
+	connString := fmt.Sprintf("postgres://ls2user:%s@localhost:5433/lucentsave2", os.Getenv("LS2_DB_PASSWORD"))
+	// connString := fmt.Sprintf("postgres://ls2user@localhost:5433/lucentsave2")
 	var err error
 	db, err = pgxpool.New(ctx, connString)
 	if err != nil {
@@ -134,7 +135,7 @@ func copyUsers(db *sql.DB) {
 }
 
 func migrate() {
-	dbOld, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	dbOld, err := sql.Open("postgres", "user=postgres dbname=mydatabase sslmode=disable port=5433")
 
 	copyUsers(dbOld)
 
@@ -158,7 +159,7 @@ func migrate() {
 			continue
 		}
 
-		post.UserID -= 34
+		// post.UserID -= 34
 		savePost(post)
 		// Print the title
 		fmt.Println(post.Title)
@@ -176,7 +177,7 @@ func main() {
 	initTemplates()
 	initOpenaiClient()
 	// migrate()
-	generateEmbeddingsForExistingPosts()
+	// generateEmbeddingsForExistingPosts()
 
 	addHandleFuncs()
 

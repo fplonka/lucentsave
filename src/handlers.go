@@ -276,7 +276,6 @@ func isUrl(str string) bool {
 
 // TODO this is so shit jakdfljkldafjkldjf
 func fetchURL(w http.ResponseWriter, r *http.Request) {
-	time.Sleep(2 * time.Second)
 	url := r.URL.Query().Get("url")
 
 	if !isUrl(url) {
