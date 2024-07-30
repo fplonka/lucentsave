@@ -102,13 +102,13 @@ func getPostListHandler(path string) http.HandlerFunc {
 		data["Posts"] = postEntries
 
 		w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0")
-		var err error
-		if r.Header.Get("HX-Request") == "true" {
-			logAndRespondInternalError(logger, "hx-request in path?!", w, nil)
-			return
-		} else {
-			err = postListTemplate.ExecuteTemplate(w, "base", data)
-		}
+		// var err error
+		// if r.Header.Get("HX-Request") == "true" {
+		// logAndRespondInternalError(logger, "hx-request in path?!", w, nil)
+		// return
+		// } else {
+		err := postListTemplate.ExecuteTemplate(w, "base", data)
+		// }
 
 		if err != nil {
 			logAndRespondInternalError(logger, "post list template error", w, nil)
