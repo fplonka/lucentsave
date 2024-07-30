@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -368,7 +368,7 @@ func postStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signinPageHandler(w http.ResponseWriter, r *http.Request) {
-	writeCacheHeader(maxCacheTimeout, w)
+	w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0")
 	w.Header().Set("Vary", "HX-Request")
 
 	var err error
@@ -385,7 +385,7 @@ func signinPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func registerPageHandler(w http.ResponseWriter, r *http.Request) {
-	writeCacheHeader(maxCacheTimeout, w)
+	w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0")
 	w.Header().Set("Vary", "HX-Request")
 
 	var err error
@@ -407,34 +407,38 @@ func authenticateHandler(w http.ResponseWriter, r *http.Request) {
 
 	email := r.Form.Get("email")
 	if email == "" {
-		respondBadRequest(w)
+		http.Error(w, "Error: No email provided.", http.StatusUnauthorized)
 		return
 	}
 
 	hashedPassword, userID, err := getHashedPasswordAndUserId(email)
 	if err != nil {
+		// var pgErr pgx.PgError
 		if err == pgx.ErrNoRows {
-			http.Error(w, "no user found with provided email", http.StatusUnauthorized)
+			// if errors.As(err, )
+			http.Error(w, "Error: No user found with provided email.", http.StatusUnauthorized)
 		} else {
-			http.Error(w, "authentication failed", http.StatusUnauthorized)
+			fmt.Println("ERROR IS:", err, err == pgx.ErrNoRows)
+			fmt.Printf("%v\n", err)
+			fmt.Printf("%v\n", pgx.ErrNoRows)
+			http.Error(w, "Error: Authentication failed.", http.StatusUnauthorized)
 		}
 		return
 	}
 
 	password := r.Form.Get("password")
 	if password == "" {
-		http.Error(w, "password not provided", http.StatusUnauthorized)
+		http.Error(w, "Error: No password provided.", http.StatusUnauthorized)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)); err != nil {
-		http.Error(w, "authentication failed", http.StatusUnauthorized)
+		http.Error(w, "Error: Incorrect password.", http.StatusUnauthorized)
 		return
 	}
 
-	// w.Header().Set("HX-Redirect", "/saved")
+	w.Header().Set("HX-Redirect", "/saved")
 	generateAndSetAuthToken(w, userID)
-	http.Redirect(w, r, "/saved", http.StatusTemporaryRedirect)
 }
 
 // TODO: error messages on frontend
@@ -443,46 +447,47 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	email := r.Form.Get("email")
 	if email == "" {
-		http.Error(w, "email not provided", http.StatusBadRequest)
+		http.Error(w, "Error: No email provided.", http.StatusBadRequest)
 		return
 	}
 
 	_, err := mail.ParseAddress(email)
 	if err != nil {
-		http.Error(w, "invalid email", http.StatusBadRequest)
+		http.Error(w, "Error: Provided email is invalid.", http.StatusBadRequest)
 		return
 	}
 
 	taken, err := checkUserExists(email)
 	if err != nil {
-		http.Error(w, "failed to create account", http.StatusInternalServerError)
+		http.Error(w, "Error: Failed to create user.", http.StatusInternalServerError)
 		return
 	}
 
 	if taken {
-		http.Error(w, "email already in use", http.StatusBadRequest)
+		http.Error(w, "Error: Email is already in use.", http.StatusBadRequest)
 		return
 	}
 
 	password := r.Form.Get("password")
 	if password == "" {
-		http.Error(w, "password not provided", http.StatusBadRequest)
+		http.Error(w, "Error: No password provided.", http.StatusBadRequest)
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
-		http.Error(w, "failed to create account", http.StatusInternalServerError)
+		http.Error(w, "Error: Failed to create user.", http.StatusInternalServerError)
 		return
 	}
 
 	id, err := createUser(email, string(hashedPassword))
 
 	if err != nil {
-		http.Error(w, "failed to create account", http.StatusInternalServerError)
+		http.Error(w, "Error: Failed to create user.", http.StatusInternalServerError)
 		return
 	}
 
+	w.Header().Set("HX-Redirect", "/saved")
 	generateAndSetAuthToken(w, id)
 }
 

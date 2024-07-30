@@ -1,4 +1,18 @@
-{{define "title"}} Post List {{end}}
+{{define "title"}}
+
+{{if eq .Path "/saved"}}
+Saved Posts - Lucentsave
+{{end}}
+
+{{if eq .Path "/read"}}
+Read Posts - Lucentsave
+{{end}}
+
+{{if eq .Path "/search"}}
+Search Posts - Lucentsave
+{{end}}
+
+{{end}}
 
 {{define "postEntry"}}
 <div class="flex justify-between items-center">
