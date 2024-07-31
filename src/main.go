@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -100,9 +101,20 @@ func main() {
 	initDatabase()
 	initTemplates()
 	initOpenaiClient()
-	// generateEmbeddingsForExistingPosts()
-
 	addHandleFuncs()
+
+	// init the node server
+	cmd := exec.Command("node", "../postSimplifyingServer.js")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+	defer func() {
+		if err := cmd.Process.Kill(); err != nil {
+			log.Printf("Failed to kill Node.js server: %v", err)
+		}
+	}()
 
 	// set up logging
 	if os.Getenv("ENV") == "production" {

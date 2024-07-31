@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -217,13 +219,32 @@ func updatePostStateHandler(w http.ResponseWriter, r *http.Request) {
 
 func savePostHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	title := r.Form.Get("title")
 	url := r.Form.Get("url")
-	content := r.Form.Get("content")
-
 	userID := getUserIdFromRequest(r)
-
 	logger := slog.Default().With("func", "savePostHandler", "userID", userID)
+
+	// Fetch processed content from Node.js server
+	nodeResp, err := http.Post("http://localhost:3000/process", "application/json",
+		bytes.NewBufferString(`{"url":"`+url+`"}`))
+	if err != nil {
+		logAndRespondInternalError(logger, "failed to fetch from Node server", w, err)
+		return
+	}
+	defer nodeResp.Body.Close()
+
+	if nodeResp.StatusCode != http.StatusOK {
+		respondBadRequest(w)
+		return
+	}
+
+	var articleData map[string]string
+	if err := json.NewDecoder(nodeResp.Body).Decode(&articleData); err != nil {
+		logAndRespondInternalError(logger, "failed to decode Node server response", w, err)
+		return
+	}
+
+	title := articleData["title"]
+	content := articleData["content"]
 
 	totalLength := len(title) + len(url) + len(content)
 	if totalLength > 200000 {
@@ -235,6 +256,7 @@ func savePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := Post{URL: url, Title: title, Body: content, TimeAdded: time.Now().Unix(), UserID: userID}
 	postID, err := savePost(post)
 	if err != nil {
+		logger.Error("failed to save post")
 		respondInternalError(w)
 		return
 	}
@@ -243,7 +265,6 @@ func savePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	go saveEmbedding(post)
 
-	// we need to pass in numbers for Index and Last so that the post doesn't think it's the latpost, since then it wouldn't render the separator
 	err = postListTemplate.ExecuteTemplate(w, "postEntry", map[string]any{"Post": post, "Index": 0, "Total": 0})
 	if err != nil {
 		logger = logger.With("postID", postID)

@@ -110,73 +110,27 @@ Search Posts - Lucentsave
         const formData = new FormData(e.target);
         const url = formData.get('url');
 
-        console.log("URL IS:", url)
-        fetch(`/fetch-url?url=${encodeURIComponent(url)}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.statusText);
-                }
-                return response.text();
-            })
-            .then(html => {
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-
-                // Update all relative image URLs to absolute URLs
-                const parsedUrl = new URL(url);
-                const baseSiteUrl = `${parsedUrl.protocol}//${parsedUrl.host}`;
-
-                function updateUrlAttribute(element, attribute) {
-                    const url = element.getAttribute(attribute);
-                    console.log("have url:", url)
-                    // convert relative urls, but not page-jumping navigation urls which have a #section part
-                    if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('//') && !url.includes('#')) {
-                        element.setAttribute(attribute, baseSiteUrl + (url.startsWith('/') ? '' : '/') + url);
-                        console.log("updated to:", element.getAttribute(attribute))
-                    }
-                }
-                doc.querySelectorAll('img').forEach(img => {
-                    updateUrlAttribute(img, 'src');
-                });
-                doc.querySelectorAll('a').forEach(link => {
-                    updateUrlAttribute(link, 'href');
-                });
-
-                // Use Readability to parse the document
-                const reader = new Readability(doc);
-                const article = reader.parse();
-
-                // Prepare data for backend
-                const data = {
-                    title: article.title,
-                    content: article.content,
-                    url: url,
-                    push: true
-                };
-
-                htmx.ajax('POST', '/save', {
-                    target: '#posts',
-                    swap: 'afterbegin',
-                    values: data,
-                }).then(() => {
+        // we're doing something htmx-like a bit manually. do the POST to get the html fragment to add to the post list, 
+        // but check for errors in fetching the post. if no errors then htmx.swap the fragment into the post list.
+        htmx.ajax('POST', '/save', {
+            values: { url: url },
+            handler: (response) => {
+                const status = response['htmx-internal-data'].xhr.status;
+                if (status >= 400) { // check for failing to save the post...
+                    indicatorTextElm.textContent = "Failed to save post"
+                } else {
+                    htmx.swap("#posts", response["htmx-internal-data"].xhr.response, { swapStyle: 'afterbegin' });
                     console.log('Post saved and UI updated successfully!');
                     indicatorElm.style.display = 'none'
                     e.target.reset();
-                }).catch(error => {
-                    indicatorTextElm.textContent = "Failed to save post"
-                    console.error('Error with htmx request:', error);
-                });
-
-            })
-            .catch(error => {
-                indicatorTextElm.textContent = "Failed to save post"
-                console.error('Error fetching or processing URL:', error);
-            });
+                }
+            }
+        })
     });
 </script>
 {{end}}
 
 {{if eq .Path "/search"}}
-<!-- tab index?? -->
 <form class="mt-5 flex items-center w-full" onsubmit="return false">
     <input tabindex="1" type="search" name="query" class="flex-1 py-1 px-2 border-2 border-black"
         placeholder="Enter term to start searching..." hx-post="/query" hx-trigger="input changed delay:100ms, search"
