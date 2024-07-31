@@ -81,23 +81,36 @@ Search Posts - Lucentsave
 {{end}}
 
 {{if eq .Path "/saved"}}
-<div class="mt-5 flex items-center space-x-2">
-    <input type="url" id="urlInput" placeholder="Enter link to save here..."
-        class="w-full py-1 px-2 border-2 border-black">
-    <button id="fetchAndSaveBtn"
+<form id="saveForm" class="mt-5 flex items-center space-x-2">
+    <input type="url" id="urlInput" name="url" placeholder="Enter link to save here..."
+        class="w-full py-1 px-2 border-2 border-black" required tabindex="1">
+    <button type="submit"
         class="py-1 px-2 border-2 border-black bg-black text-white hover:bg-gray-700 cursor-pointer">Save</button>
-</div>
+</form>
 
 
 <script async src="../static/readability.js"></script>
 <script>
-    document.getElementById('fetchAndSaveBtn').addEventListener('click', function () {
+    // focus input box when we press '/'
+    document.addEventListener('keydown', function (e) {
+        if (e.key === '/' || e.keyCode === 191) {
+            e.preventDefault();
+            document.getElementById('urlInput').focus();
+        }
+    });
+
+    document.getElementById('saveForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
         const indicatorElm = document.getElementById('indicator')
         const indicatorTextElm = document.getElementById('indicatorText')
         indicatorElm.style.display = 'block'
         indicatorTextElm.textContent = 'Saving post...'
 
-        const url = document.getElementById('urlInput').value;
+        const formData = new FormData(e.target);
+        const url = formData.get('url');
+
+        console.log("URL IS:", url)
         fetch(`/fetch-url?url=${encodeURIComponent(url)}`)
             .then(response => {
                 if (!response.ok) {
@@ -147,6 +160,7 @@ Search Posts - Lucentsave
                 }).then(() => {
                     console.log('Post saved and UI updated successfully!');
                     indicatorElm.style.display = 'none'
+                    e.target.reset();
                 }).catch(error => {
                     indicatorTextElm.textContent = "Failed to save post"
                     console.error('Error with htmx request:', error);

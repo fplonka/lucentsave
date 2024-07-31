@@ -24,6 +24,7 @@ var db *pgxpool.Pool
 var postListTemplate *template.Template
 var postViewTemplate *template.Template
 var signinTemplate *template.Template
+var privacyPolicyTemplate *template.Template
 
 // Initialize and parse templates once at startup
 func initTemplates() {
@@ -70,6 +71,11 @@ func initTemplates() {
 	}
 
 	signinTemplate, err = template.ParseFiles("templates/signin.html", "templates/base.html")
+	if err != nil {
+		panic(err)
+	}
+
+	privacyPolicyTemplate, err = template.ParseFiles("templates/privacyPolicy.html", "templates/base.html")
 	if err != nil {
 		panic(err)
 	}

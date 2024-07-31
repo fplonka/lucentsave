@@ -46,6 +46,7 @@ func addHandleFuncs() {
 	http.HandleFunc("/signin", redirectIfSignedInMiddelware(signinPageHandler))     // sign in page
 	http.HandleFunc("/register", redirectIfSignedInMiddelware(registerPageHandler)) // registration page
 	http.HandleFunc("/authenticate", authenticateHandler)                           // sign in attempt
+	http.HandleFunc("/privacy-policy", privacyPolicyHandler)                        // privacy policy static page for chrome extension store...
 }
 
 func writeCacheHeader(duration int, w http.ResponseWriter) {
@@ -318,14 +319,13 @@ func postStaticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	post, err := getPostContent(postID, userID)
 	if err != nil {
-		respondInternalError(w)
+		http.Error(w, "Post not found.", http.StatusNotFound)
 		return
 	}
 
 	logger := slog.Default().With("func", "postStaticHandler", "userID", userID, "postID", postID)
 
 	writeCacheHeader(30*24*60*60, w) // month
-	w.Header().Set("Vary", "HX-Request")
 	if r.Header.Get("HX-Request") == "true" {
 		logAndRespondInternalError(logger, "shouldnt ever happen?!?!", w, err)
 		return
@@ -504,4 +504,15 @@ func logRequest(next http.Handler) http.Handler {
 
 		slog.Info("req", "method", r.Method, "path", r.URL.Path, "duration", duration.Milliseconds())
 	})
+}
+
+func privacyPolicyHandler(w http.ResponseWriter, r *http.Request) {
+	writeCacheHeader(maxCacheTimeout, w)
+
+	err := privacyPolicyTemplate.ExecuteTemplate(w, "base", nil)
+
+	if err != nil {
+		logger := slog.Default().With("func", "privacyPolicyHandler")
+		logAndRespondInternalError(logger, "failed to execute privacy policy page template", w, err)
+	}
 }
