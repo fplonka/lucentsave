@@ -15,7 +15,7 @@ Search Posts - Lucentsave
 {{end}}
 
 {{define "postEntry"}}
-<div class="flex justify-between items-center">
+<div class="flex justify-between items-center py-4">
     <a href="/post?id={{.Post.ID}}" class="hover:text-gray-500">
         <h2 class="text-xl md:text-2xl font-bold block">{{.Post.Title}}</h2>
         <p class="text-sm block">{{(baseURL .Post.URL)}}</p>
@@ -29,9 +29,6 @@ Search Posts - Lucentsave
     </button>
     {{end}}
 </div>
-{{if not (isLast .Index .Total)}}
-<hr class="border-black border-t-2 border-dashed my-4" />
-{{end}}
 {{end}}
 
 {{define "postList"}}
@@ -40,11 +37,10 @@ Search Posts - Lucentsave
     <div class="text-sm block italic" id="indicatorText">Saving...</div>
 </div>
 
-<div id="posts" class="mt-4">
-    {{$totalPosts := len .Posts}}
+<div id="posts" class="divide-y-2 divide-black divide-dashed">
     {{$showCheckbox := eq .Path "/read"}}
     {{range $index, $element := .Posts}}
-    {{template "postEntry" dict "Post" $element "Index" $index "Total" $totalPosts "ShowLikeCheckbox" $showCheckbox}}
+    {{template "postEntry" dict "Post" $element "ShowLikeCheckbox" $showCheckbox}}
     {{end}}
 </div>
 {{end}}
