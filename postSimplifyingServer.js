@@ -18,6 +18,7 @@ app.post('/process', async (req, res) => {
         const response = await fetch(url);
         const html = await response.text();
 
+
         // Create a new JSDOM instance
         const dom = new JSDOM(html, { url });
 

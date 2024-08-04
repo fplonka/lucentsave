@@ -72,7 +72,11 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := getRequestToken(r)
 		if err != nil {
-			slog.Warn("invalid token")
+			// TODO: bug, maybe fix one day. login in, delete auth cookie, try to save post.
+			// unauthed so we get redirect to /signin, but hx-request is true after the
+			// redirect and the sign in form fragment gets added to the post list by htmx...
+			slog.Warn("invalid token or no token")
+			w.Header().Set("LS-auth-failed", "true") // so the extension can tell the user is not logged in
 			http.Redirect(w, r, "/signin", http.StatusTemporaryRedirect)
 			return
 		}
