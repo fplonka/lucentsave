@@ -32,8 +32,7 @@ Search Posts - Lucentsave
 {{end}}
 
 {{define "postList"}}
-<div class="flex justify-between items-center mt-4 border-black border-b-2 border-dashed pb-4" id="indicator"
-    style="display: none;">
+<div class="justify-between items-center mt-4 border-black border-b-2 border-dashed pb-4 hidden" id="indicator">
     <div class="text-sm block italic" id="indicatorText">Saving...</div>
 </div>
 
@@ -100,7 +99,8 @@ Search Posts - Lucentsave
 
         const indicatorElm = document.getElementById('indicator')
         const indicatorTextElm = document.getElementById('indicatorText')
-        indicatorElm.style.display = 'block'
+        indicatorElm.classList.remove('hidden')
+        indicatorElm.classList.add('flex')
         indicatorTextElm.textContent = 'Saving post...'
 
         const formData = new FormData(e.target);
@@ -117,7 +117,8 @@ Search Posts - Lucentsave
                 } else {
                     htmx.swap("#posts", response["htmx-internal-data"].xhr.response, { swapStyle: 'afterbegin' });
                     console.log('Post saved and UI updated successfully!');
-                    indicatorElm.style.display = 'none'
+                    indicatorElm.classList.remove('flex')
+                    indicatorElm.classList.add('hidden')
                     e.target.reset();
                 }
             }
@@ -130,7 +131,7 @@ Search Posts - Lucentsave
 <form class="mt-5 flex items-center w-full" onsubmit="return false">
     <input tabindex="1" type="search" name="query" class="flex-1 py-1 px-2 border-2 border-black"
         placeholder="Enter term to start searching..." hx-post="/query" hx-trigger="input changed delay:100ms, search"
-        hx-target="#posts" hx-indicator="#query-indicator" />
+        hx-target="#posts" hx-indicator="#query-indicator" hx-swap="outerHTML" />
     <div id="query-indicator" class="opacity-0 my-indicator ml-3">
         <img src="../../static/spinner.svg" class="w-6 h-6" alt="Loading...">
     </div>
