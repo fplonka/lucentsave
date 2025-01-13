@@ -17,7 +17,7 @@ type UserClaims struct {
 }
 
 func generateAndSetAuthToken(w http.ResponseWriter, userID int) error {
-	expirationTime := time.Now().Add(7 * 24 * time.Hour) // 1 week
+	expirationTime := time.Now().Add(4 * 7 * 24 * time.Hour) // 4 weeks
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
 		userID,
@@ -84,6 +84,12 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		claims, ok := token.Claims.(*UserClaims)
 		if !ok {
 			logAndRespondInternalError(slog.Default(), "failed to extract token claims", w, err)
+			return
+		}
+
+		// Refresh the token expiration
+		if err := generateAndSetAuthToken(w, claims.UserID); err != nil {
+			logAndRespondInternalError(slog.Default(), "failed to refresh token", w, err)
 			return
 		}
 
