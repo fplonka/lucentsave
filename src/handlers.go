@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/mail"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -35,6 +36,7 @@ func addHandleFuncs() {
 	http.HandleFunc("/save", authMiddleware(savePostHandler))
 	http.HandleFunc("/delete-post", authMiddleware(deletePostHandler))
 	http.HandleFunc("/create-user", createUserHandler) // registration attempt
+	http.HandleFunc("/signout", signoutHandler)          // sign out endpoint
 
 	// GET
 	http.HandleFunc("/post", authMiddleware(postStaticHandler))
@@ -69,9 +71,20 @@ func respondBadRequest(w http.ResponseWriter) {
 	http.Error(w, "bad request", http.StatusBadRequest)
 }
 
-func respondUnauthorized(w http.ResponseWriter) {
-	http.Error(w, "unauthorized", http.StatusUnauthorized)
+func signoutHandler(w http.ResponseWriter, r *http.Request) {
+	// Clear the auth cookie by setting it to expire immediately
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		HttpOnly: true,
+		Secure:   os.Getenv("ENV") == "production",
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+	})
 
+	// Redirect to signin page
+	http.Redirect(w, r, "/signin", http.StatusTemporaryRedirect)
 }
 
 func logAndRespondInternalError(logger *slog.Logger, msg string, w http.ResponseWriter, err error, attr ...any) {

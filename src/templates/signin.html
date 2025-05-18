@@ -40,19 +40,20 @@ Lucentsave
 <form hx-post="/authenticate" hx-ext="response-targets" hx-target-error="#error-message"
     class="border-b-2 border-black dark:border-white border-dashed">
     <input type="email" name="email" autocomplete="email" placeholder="Email" required
-        class="w-full py-1 mb-2 px-2 border-2 border-black">
+        class="w-full py-1 mb-2 px-2 border-2 border-black dark:border-white dark:bg-black dark:text-white">
     <input type="password" name="password" autocomplete="current-password" current-password placeholder="Password"
         required class="w-full py-1 px-2 border-2 border-black dark:border-white dark:bg-black dark:text-white">
     <div class="flex items-center">
         <button type="submit"
-            class="py-1 px-2 my-4 bg-black text-white border-2 border-black dark:border-white hover:bg-gray-700 dark:hover:bg-gray-600 cursor-pointer">Sign
+            class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 dark:border-white dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer">Sign
             In</button>
         <div id="error-message" class="ml-4"></div>
     </div>
 </form>
 <div hx-boost="true" class="mt-4">
     Don't have an account?
-    <a href="/register" hx-target="#auth-form" class="text-black dark:text-white underline hover:text-gray-500 dark:hover:text-gray-300">Register.</a>
+    <a href="/register" hx-target="#auth-form"
+        class="text-black dark:text-white underline hover:text-gray-500 dark:hover:text-gray-300">Register.</a>
 </div>
 {{end}}
 
@@ -60,18 +61,19 @@ Lucentsave
 <form hx-post="/create-user" hx-ext="response-targets" hx-target-error="#error-message"
     class="border-b-2 border-black dark:border-white border-dashed">
     <input type="email" name="email" autocomplete="email" placeholder="Email" required
-        class="w-full py-1 mb-2 px-2 border-2 border-black">
+        class="w-full py-1 mb-2 px-2 border-2 border-black dark:border-white dark:bg-black dark:text-white">
     <input type="password" name="password" autocomplete="new-password" placeholder="Password" required
         class="w-full py-1 px-2 border-2 border-black dark:border-white dark:bg-black dark:text-white">
     <div class="flex items-center">
         <button type="submit"
-            class="py-1 px-2 my-4 bg-black dark:bg-gray-700 text-white border-2 border-black dark:border-white hover:bg-gray-700 dark:hover:bg-gray-600 cursor-pointer">Register</button>
+            class="py-1 px-2 my-4 bg-black text-white border-2 border-black hover:bg-gray-700 dark:border-white dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer">Register</button>
         <div id="error-message" class="ml-4"></div>
     </div>
 </form>
 <p hx-boost="true" class="mt-4">
     Already have an account?
-    <a href="/signin" hx-target="#auth-form" class="text-black dark:text-white underline hover:text-gray-500 dark:hover:text-gray-300">Sign
+    <a href="/signin" hx-target="#auth-form"
+        class="text-black dark:text-white underline hover:text-gray-500 dark:hover:text-gray-300">Sign
         in.</a>
 </p>
 {{end}}
