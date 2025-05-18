@@ -16,14 +16,14 @@ Search Posts - Lucentsave
 
 {{define "postEntry"}}
 <div class="flex justify-between items-center py-4">
-    <a href="/post?id={{.Post.ID}}" class="hover:text-gray-500">
+    <a href="/post?id={{.Post.ID}}" class="hover:text-gray-500 dark:text-white dark:hover:text-gray-300">
         <h2 class="text-xl md:text-2xl font-bold block">{{.Post.Title}}</h2>
         <p class="text-sm block">{{(baseURL .Post.URL)}}</p>
     </a>
 
     {{if .ShowLikeCheckbox}}
     <button type="button" id="like-button-{{.Post.ID}}" onclick="toggleLike('{{.Post.ID}}')"
-        class="text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500"
+        class="text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500 dark:text-white dark:hover:text-gray-300"
         style="display: {{if .Post.IsRead}}block{{else}}none{{end}};">
         {{if .Post.IsLiked}} ★ {{else}} ☆ {{end}}
     </button>
@@ -32,11 +32,11 @@ Search Posts - Lucentsave
 {{end}}
 
 {{define "postList"}}
-<div class="justify-between items-center mt-4 border-black border-b-2 border-dashed pb-4 hidden" id="indicator">
-    <div class="text-sm block italic" id="indicatorText">Saving...</div>
+<div class="justify-between items-center mt-4 border-black dark:border-white border-b-2 border-dashed pb-4 hidden" id="indicator">
+    <div class="text-sm block italic dark:text-white" id="indicatorText">Saving...</div>
 </div>
 
-<div id="posts" class="divide-y-2 divide-black divide-dashed">
+<div id="posts" class="divide-y-2 divide-black dark:divide-white divide-dashed">
     {{$showCheckbox := eq .Path "/read"}}
     {{range $index, $element := .Posts}}
     {{template "postEntry" dict "Post" $element "ShowLikeCheckbox" $showCheckbox}}
@@ -78,9 +78,9 @@ Search Posts - Lucentsave
 {{if eq .Path "/saved"}}
 <form id="saveForm" class="mt-5 flex items-center space-x-2">
     <input type="url" id="urlInput" name="url" placeholder="Enter link to save here..."
-        class="w-full py-1 px-2 border-2 border-black" required tabindex="1">
+        class="w-full py-1 px-2 border-2 border-black dark:border-white dark:bg-black dark:text-white" required tabindex="1">
     <button type="submit"
-        class="py-1 px-2 border-2 border-black bg-black text-white hover:bg-gray-700 cursor-pointer">Save</button>
+        class="py-1 px-2 border-2 border-black dark:border-white bg-black text-white hover:bg-gray-700 dark:hover:bg-gray-600 cursor-pointer">Save</button>
 </form>
 
 
@@ -129,7 +129,7 @@ Search Posts - Lucentsave
 
 {{if eq .Path "/search"}}
 <form class="mt-5 flex items-center w-full" onsubmit="return false">
-    <input tabindex="1" type="search" name="query" class="flex-1 py-1 px-2 border-2 border-black"
+    <input tabindex="1" type="search" name="query" class="flex-1 py-1 px-2 border-2 border-black dark:border-white dark:bg-black dark:text-white"
         placeholder="Enter term to start searching..." hx-post="/query" hx-trigger="input changed delay:100ms, search"
         hx-target="#posts" hx-indicator="#query-indicator" hx-swap="outerHTML" />
     <div id="query-indicator" class="opacity-0 my-indicator ml-3">

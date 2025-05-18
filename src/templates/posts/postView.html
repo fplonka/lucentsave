@@ -5,16 +5,18 @@
     <div class="flex justify-between items-center">
         <div class="flex space-x-2">
             <button type="button" id="read-button" onclick="toggleRead()"
-                class="py-1 px-2 bg-black text-white border-2 border-black hover:bg-gray-700 cursor-pointer">
+                class="py-1 px-2 bg-black text-white border-2 border-black dark:border-white hover:bg-gray-700 dark:hover:bg-gray-600 cursor-pointer">
                 {{if .Post.IsRead}} Mark as Unread {{ else }} Mark as Read {{end}}
             </button>
             <button type="button" id="like-button" onclick="toggleLike()"
-                class="text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500"
-                style=" display: {{if .Post.IsRead}} block {{else}} none {{end}}">
+                class="text-black dark:text-white px-2 py-1 cursor-pointer text-xl hover:text-gray-500 dark:hover:text-gray-300"
+                style="display:{{if .Post.IsRead}}block{{else}}none{{end}}">
                 {{if .Post.IsLiked}} ★ {{ else }} ☆ {{end}}
             </button>
         </div>
-        <span class=" text-black px-2 py-1 cursor-pointer text-xl hover:text-gray-500" onclick="window.scrollTo(0, 0)">
+        <span
+            class="text-black dark:text-white px-2 py-1 cursor-pointer text-xl hover:text-gray-500 dark:hover:text-gray-300"
+            onclick="window.scrollTo(0, 0)">
             ↑
         </span>
     </div>
@@ -61,25 +63,24 @@
 
 {{define "content"}}
 
-<div class="border-b-2 border-dashed border-black break-words space-y-4">
+<div class="border-b-2 border-dashed border-black dark:border-white break-words space-y-4">
     <div class="flex justify-between items-center group">
         <div>
-            <h2 class="text-xl md:text-2xl font-bold text-black space-y-4 mt-4">{{.Post.Title}}</h2>
+            <h2 class="text-xl md:text-2xl font-bold text-black dark:text-white space-y-4 mt-4">{{.Post.Title}}</h2>
             <a href="{{.Post.URL}}"
-                class="text-sm text-black block hover:underline hover:text-gray-500 break-all">{{.Post.URL}}</a>
+                class="text-sm text-black dark:text-white block hover:underline hover:text-gray-500 dark:hover:text-gray-300 break-all">{{.Post.URL}}</a>
         </div>
-        <div class=" text-black px-2 py-1 cursor-pointer font-black hover:text-gray-500"
+        <div class="text-black dark:text-white px-2 py-1 cursor-pointer font-black hover:text-gray-500 dark:hover:text-gray-300"
             hx-post="/delete-post?id={{.Post.ID}}" hx-confirm="Are you sure you wish to delete this post?"
             hx-trigger="click">
             ✕
         </div>
     </div>
 
-    <div
-        class="prose
-			prose-base md:prose-lg text-black mt-2 pb-4 prose-pre:rounded-none prose-pre:bg-gray-100 prose-pre:text-black
+    <div class="prose dark:prose-invert dark:text-white
+			prose-base md:prose-lg  mt-2 pb-4 prose-pre:rounded-none 
 			prose-img:mx-auto prose-img:mb-1 prose-quoteless prose-blockquote:font-normal hover:prose-a:text-gray-500
-			relative prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 prose-code:font-normal prose-code:p-0.5">
+			relative prose-code:before:hidden prose-code:after:hidden prose-code:font-normal prose-code:p-0.5">
         {{.Post.BodyHTML}}
     </div>
 </div>
