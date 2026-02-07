@@ -16,3 +16,17 @@ jobs:
           go-version: "1.24"
       - name: Build
         run: cd src && go build -v ./...
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} \
+            'cd /opt/lucentsave && git pull && docker compose up -d --build'
