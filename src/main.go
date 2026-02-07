@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/pgvector/pgvector-go"
@@ -116,13 +115,6 @@ func main() {
 			log.Printf("Failed to kill Node.js server: %v", err)
 		}
 	}()
-
-	if os.Getenv("RESCRAPE") == "true" {
-		log.Println("RESCRAPE mode: waiting for Node server to start...")
-		time.Sleep(3 * time.Second)
-		rescrapeEmptyPosts()
-		return
-	}
 
 	// set up logging
 	if os.Getenv("ENV") == "production" {
