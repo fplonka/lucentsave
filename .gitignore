@@ -22,3 +22,5 @@ go.work
 src/lucentsave
 src/log.txt
 **/.DS_Store
+node_modules/
+.env

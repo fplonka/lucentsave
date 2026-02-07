@@ -1,0 +1,9 @@
+node_modules/
+.git/
+.github/
+*.md
+.DS_Store
+.env
+src/log.txt
+src/lucentsave
+reset_db.sql
