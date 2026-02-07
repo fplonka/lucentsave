@@ -8,12 +8,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserClaims struct {
 	UserID int `json:"userID"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func generateAndSetAuthToken(w http.ResponseWriter, userID int) error {
@@ -21,7 +21,7 @@ func generateAndSetAuthToken(w http.ResponseWriter, userID int) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
 		userID,
-		jwt.StandardClaims{ExpiresAt: expirationTime.Unix()},
+		jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(expirationTime)},
 	})
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
