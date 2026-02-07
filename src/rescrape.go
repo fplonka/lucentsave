@@ -43,6 +43,9 @@ func rescrapeEmptyPosts() {
 	log.Printf("rescrape: found %d posts to scrape", len(posts))
 
 	succeeded, failed := 0, 0
+	placeholder := "<p>We were unable to restore this post's content following a security breach " +
+		"at our previous hosting provider. The original URL is preserved above — " +
+		"you can visit it to read the article.</p>"
 
 	for i, p := range posts {
 		log.Printf("rescrape: [%d/%d] post %d: %s", i+1, len(posts), p.id, p.url)
@@ -51,11 +54,13 @@ func rescrapeEmptyPosts() {
 		if err != nil {
 			log.Printf("rescrape: failed to fetch post %d: %v", p.id, err)
 			title = domainFromURL(p.url)
-			body = "<p>We were unable to restore this post's content following a security breach " +
-				"at our previous hosting provider. The original URL is preserved above — " +
-				"you can visit it to read the article.</p>"
+			body = placeholder
 			failed++
 		} else {
+			// node sometimes returns empty title for pages it partially parsed
+			if title == "" {
+				title = domainFromURL(p.url)
+			}
 			succeeded++
 		}
 
@@ -67,7 +72,14 @@ func rescrapeEmptyPosts() {
 			continue
 		}
 
-		saveEmbedding(Post{ID: p.id, URL: p.url, Title: title, Body: body, UserID: p.userID})
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("rescrape: embedding panicked for post %d: %v", p.id, r)
+				}
+			}()
+			saveEmbedding(Post{ID: p.id, URL: p.url, Title: title, Body: body, UserID: p.userID})
+		}()
 
 		// small delay to be nice to node server and openai
 		time.Sleep(200 * time.Millisecond)
